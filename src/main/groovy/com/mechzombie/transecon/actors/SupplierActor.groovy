@@ -10,6 +10,7 @@ class SupplierActor extends BaseEconActor{
   def unitInput = [:]
   def externalInputs = [:]
   def resources = [:]
+  def money = 0
 
   SupplierActor(UUID id) {
     super(id)
@@ -25,10 +26,18 @@ class SupplierActor extends BaseEconActor{
     loop {
       react {
         def theResponse
-        switch (it.name) {
-          case 'status':
+        switch (it.type) {
+          case Command.STATUS:
             theResponse = status()
             break
+          case Command.SEND_MONEY:
+            def from = it.vals.from
+            def amount = it.vals.amount
+            money += amount
+            def reason = it.vals.reason
+            theResponse = "OK"
+            break
+
           case 'run_turn':
           default:
             theResponse = "unrecognized Command"

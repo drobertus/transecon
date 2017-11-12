@@ -4,6 +4,7 @@ version '1.0-SNAPSHOT'
 apply plugin: 'groovy'
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'jacoco'
 
 sourceCompatibility = 1.8
 
@@ -22,11 +23,23 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.codehaus.gpars/gpars
     compile group: 'org.codehaus.gpars', name: 'gpars', version: '1.2.1'
-
 }
 
 
 run {
     standardInput = System.in
 }
+
+jacoco {
+    toolVersion = "0.7.9"
+    reportsDir = file("$buildDir/reports/jacoco")
+}
+
+//jacocoTestReport {
+//    reports {
+//        xml.enabled false
+//        csv.enabled false
+//        html.destination file("${buildDir}/jacocoHtml")
+//    }
+//}
 // ./gradlew --console plain run

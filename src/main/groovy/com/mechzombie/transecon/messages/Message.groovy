@@ -13,6 +13,7 @@ class Message {
       valid = false
       println("expected ${params} but got ${vals}")
     }
+
     params.each {
       if (!vals.get(it)) {
         println("missing ${it}")
@@ -25,7 +26,7 @@ class Message {
       this.vals = vals
     }
     else{
-
+      throw Exception("Message of type ${type} requires parameters ${type.params}")
     }
   }
 }

@@ -13,8 +13,9 @@ enum Command {
   TAKE_TURN('take_turn'),
   STOCK_ITEM('stock_item', ['producer', 'product', 'price']), //[UUID, String, int]), //producer, product, price
   PRICE_ITEM('price_item', ['product']), //item to price
-  PURCHASE_ITEM('purchase_item', ['buyer', 'prodcut', 'price']), //purchaser, product, price
-  SEND_MONEY('send_money', [UUID, int]),
+  PURCHASE_ITEM('purchase_item', ['market', 'product', 'price']), //purchaser, product, price
+  FULFILL_ORDER('fulfill_order', ['buyer', 'product', 'price']),
+  SEND_MONEY('send_money', ['from', 'amount', 'reason']),
   STATUS('status')
 
 

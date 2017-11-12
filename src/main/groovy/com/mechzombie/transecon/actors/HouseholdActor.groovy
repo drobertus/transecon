@@ -8,7 +8,7 @@ class HouseholdActor extends BaseEconActor {
 
   def demands = [:] //this that the household needs per unit time
   def resources = [:] //this owned by or produced by the household per unit time
-
+  def money
 
   HouseholdActor(UUID id) {
     super(id)
@@ -17,7 +17,7 @@ class HouseholdActor extends BaseEconActor {
 
   @Override
   def status() {
-    println('getting status')
+    //println('getting status')
     def status
     try {
       status = builder.econactor {
@@ -28,18 +28,10 @@ class HouseholdActor extends BaseEconActor {
         transactions this.transactions
       }
     }
-      catch(Exception e) {
+    catch(Exception e) {
       println "err ${e}"
-      }
-
-    /*
-        builder.econactor {
-      type this.class
-      id this.uuid
-      employed employed
     }
-    */
-    println "here: ${status.toString()}"
+    //println "here: ${status.toString()}"
     return status.toString()
   }
 
@@ -49,7 +41,7 @@ class HouseholdActor extends BaseEconActor {
 
       react {
         def theResponse
-        println "it  ${it}"
+        println "HouseHold ${this.uuid} received ${it}"
         switch (it.type) {
           case String:
             theResponse = "Woohoo!!"
@@ -57,6 +49,31 @@ class HouseholdActor extends BaseEconActor {
           case Command.STATUS:
             theResponse = status()
             println "status = ${theResponse}"
+            break
+          case Command.PURCHASE_ITEM:
+            def prod = it.vals.product
+            def price = it.vals.price
+            def market = it.vals.market
+
+            if (price <= this.money) {
+              def response = purchaseItem(prod, price, market)
+              if (response.get() == 'OK') {
+                money -= price
+                def prodCount = resources.get(prod)
+                if(!prodCount) {
+                  prodCount = 0
+                }
+                prodCount++
+                theResponse = "OK"
+              }
+              else {
+                theResponse = "was unable to make purchase"
+              }
+            }
+            else {
+              theResponse = "NSF"
+            }
+            //this need to be done in line to prevent double dipping
             break
           default:
             theResponse = "message not understood '${it}'"
@@ -83,4 +100,10 @@ class HouseholdActor extends BaseEconActor {
     }
     return prices
   }
+
+  private def purchaseItem(product, price, market){
+    return reg.messageActor(market, new Message(Command.FULFILL_ORDER, [buyer: this.uuid, product: product, price: price]))
+  }
+
+
 }

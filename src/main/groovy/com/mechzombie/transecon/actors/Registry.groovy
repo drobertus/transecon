@@ -14,7 +14,7 @@ class Registry {
   }
 
   def messageActor(uuid, message){
-    actors.get(uuid).send(message)
+    return actors.get(uuid).sendAndPromise(message)
   }
 
   MarketActor[] getMarkets() {
