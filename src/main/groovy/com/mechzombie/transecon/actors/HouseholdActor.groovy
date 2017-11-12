@@ -1,14 +1,14 @@
 package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
+import com.mechzombie.transecon.messages.Message
 import groovy.json.JsonBuilder
 
 class HouseholdActor extends BaseEconActor {
 
-  boolean employed
+  def demands = [:] //this that the household needs per unit time
+  def resources = [:] //this owned by or produced by the household per unit time
 
-  def demands = [:]
-  def resources = [:]
 
   HouseholdActor(UUID id) {
     super(id)
@@ -23,7 +23,9 @@ class HouseholdActor extends BaseEconActor {
       status = builder.econactor {
         type this.class
         id this.uuid
-        employed this.employed
+        requirements this.demands
+        resources this.resources
+        transactions this.transactions
       }
     }
       catch(Exception e) {
@@ -47,21 +49,14 @@ class HouseholdActor extends BaseEconActor {
 
       react {
         def theResponse
-        println 'it' + it
-        switch (it) {
+        println "it  ${it}"
+        switch (it.type) {
           case String:
             theResponse = "Woohoo!!"
             break
-          case Command:
-            switch (it.name) {
-              case 'status':
-                theResponse = status()
-                println "status = ${theResponse}"
-                break
-              default:
-                theResponse = "unrecognized Command"
-                break
-            }
+          case Command.STATUS:
+            theResponse = status()
+            println "status = ${theResponse}"
             break
           default:
             theResponse = "message not understood '${it}'"
@@ -70,5 +65,22 @@ class HouseholdActor extends BaseEconActor {
         reply theResponse
       }
     }
+  }
+
+  def getPrices(product) {
+
+    //make calls to all markets and get prices
+    def prices = [:]
+    reg.getMarkets().each {
+      println("sending getPrice  to ${it.uuid}")
+      def priceProm = it.sendAndPromise(new Message(Command.PRICE_ITEM, [product: product]));
+      prices.put(it.uuid, priceProm)
+    }
+    prices.each { k, v ->
+      def aPrice = v.get()
+      println("price found of ${aPrice}")
+      prices.put(k, aPrice)
+    }
+    return prices
   }
 }

@@ -6,12 +6,14 @@ import groovyx.gpars.actor.DefaultActor
 abstract class BaseEconActor extends DefaultActor {
 
   def builder = new JsonBuilder()
+  def reg = Registry.instance
 
   UUID uuid
   def transactions = []
 
   BaseEconActor(UUID id) {
     this.uuid = id
+    reg.addActor(this)
     println "ID= ${this.uuid}"
   }
 

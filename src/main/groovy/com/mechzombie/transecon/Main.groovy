@@ -1,6 +1,5 @@
 package com.mechzombie.transecon
 
-import com.mechzombie.transecon.actors.BaseEconActor
 import com.mechzombie.transecon.actors.HouseholdActor
 
 class Main implements Runnable {

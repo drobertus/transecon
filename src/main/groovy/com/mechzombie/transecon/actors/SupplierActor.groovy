@@ -1,5 +1,9 @@
 package com.mechzombie.transecon.actors
 
+import com.mechzombie.transecon.messages.Command
+import com.mechzombie.transecon.messages.Message
+
+
 class SupplierActor extends BaseEconActor{
 
   def output
@@ -25,6 +29,7 @@ class SupplierActor extends BaseEconActor{
           case 'status':
             theResponse = status()
             break
+          case 'run_turn':
           default:
             theResponse = "unrecognized Command"
             break
@@ -33,5 +38,10 @@ class SupplierActor extends BaseEconActor{
         reply theResponse
       }
     }
+  }
+
+  def shipItem(MarketActor destination, String product, int price) {
+    destination.sendAndPromise(new Message(Command.STOCK_ITEM, [producer: this.uuid, product: product, price: price]) )
+
   }
 }
