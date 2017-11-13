@@ -7,13 +7,17 @@ import com.mechzombie.transecon.messages.Message
 class SupplierActor extends BaseEconActor{
 
   def output
-  def unitInput = [:]
-  def externalInputs = [:]
+  def inputs = [:]
   def resources = [:]
   def money = 0
 
   SupplierActor(UUID id) {
     super(id)
+    inputs.labor = [:]
+  }
+
+  def employHousehold(UUID uuid, int monthlyWage) {
+    inputs.labor << [uuid, monthlyWage]
   }
 
   @Override
@@ -35,6 +39,8 @@ class SupplierActor extends BaseEconActor{
             def amount = it.vals.amount
             money += amount
             def reason = it.vals.reason
+
+
             theResponse = "OK"
             break
 

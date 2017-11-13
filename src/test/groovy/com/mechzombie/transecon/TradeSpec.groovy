@@ -27,6 +27,8 @@ class TradeSpec extends Specification{
     market = new MarketActor(UUID.randomUUID())
     supplier = new SupplierActor(UUID.randomUUID())
     household = new HouseholdActor(UUID.randomUUID())
+    supplier.setMoney(50)
+    supplier
   }
 
   def cleanup() {
@@ -56,6 +58,11 @@ class TradeSpec extends Specification{
 
     then: //the purchase should fail for lack of money
     assert purchase.get() == "NSF"
+
+//    when: //the supplier pays labor to the household
+//    //TODO: how is labor/households mapped to suppliers?  How are wages set
+//
+//    then: //
 
     when: //the household purchases at full price
     household.money = 10

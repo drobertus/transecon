@@ -68,7 +68,7 @@ class MarketActor extends BaseEconActor {
                   this.money += margin
                   //message the producer with the amount, keep the difference
                   def producer = prod[1]
-                  def send = reg.messageActor(producer, new Message(Command.SEND_MONEY, [from: this.uuid, amount: (int)prod[0], reason:'sale']))
+                  def send = this.sendMoney(producer, (int)prod[0], 'sale')
                   if(send.get() == 'OK') {
                     theResponse = "OK"
                     shelf.remove(i)
