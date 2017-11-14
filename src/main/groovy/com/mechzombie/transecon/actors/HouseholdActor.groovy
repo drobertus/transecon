@@ -8,7 +8,7 @@ class HouseholdActor extends BaseEconActor {
 
   def demands = [:] //this that the household needs per unit time
   def resources = [:] //this owned by or produced by the household per unit time
-  def money
+  def money = 0
 
   HouseholdActor(UUID id) {
     super(id)
@@ -41,7 +41,7 @@ class HouseholdActor extends BaseEconActor {
 
       react {
         def theResponse
-        println "HouseHold ${this.uuid} received ${it}"
+        println "HouseHold ${this.uuid} received ${it.type}"
         switch (it.type) {
           case String:
             theResponse = "Woohoo!!"
@@ -49,6 +49,14 @@ class HouseholdActor extends BaseEconActor {
           case Command.STATUS:
             theResponse = status()
             println "status = ${theResponse}"
+            break
+          case Command.SEND_MONEY:
+            def from = it.vals.from
+            def amount = it.vals.amount
+            money += amount
+            def reason = it.vals.reason
+
+            theResponse = "OK"
             break
           case Command.PURCHASE_ITEM:
             def prod = it.vals.product
@@ -64,6 +72,8 @@ class HouseholdActor extends BaseEconActor {
                   prodCount = 0
                 }
                 prodCount++
+                resources.put(prod, prodCount)
+
                 theResponse = "OK"
               }
               else {
@@ -89,13 +99,13 @@ class HouseholdActor extends BaseEconActor {
     //make calls to all markets and get prices
     def prices = [:]
     reg.getMarkets().each {
-      println("sending getPrice  to ${it.uuid}")
+    //  println("sending getPrice  to ${it.uuid}")
       def priceProm = it.sendAndPromise(new Message(Command.PRICE_ITEM, [product: product]));
       prices.put(it.uuid, priceProm)
     }
     prices.each { k, v ->
       def aPrice = v.get()
-      println("price found of ${aPrice}")
+      //println("price found of ${aPrice}")
       prices.put(k, aPrice)
     }
     return prices

@@ -17,7 +17,7 @@ class SupplierActor extends BaseEconActor{
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {
-    inputs.labor << [uuid, monthlyWage]
+    getEmployeePayrole().put(uuid, monthlyWage)
   }
 
   @Override
@@ -30,9 +30,26 @@ class SupplierActor extends BaseEconActor{
     loop {
       react {
         def theResponse
+        println "Supplier ${this.uuid} received ${it.type}"
         switch (it.type) {
           case Command.STATUS:
             theResponse = status()
+            break
+          case Command.RUN_PAYROLL:
+            def payroll = [:]
+            getEmployeePayrole().each { k, v ->
+              if (money > v) {
+                payroll.put(k, sendMoney(k, v, 'payroll'))
+                money -= v
+              }else {
+                println("Payroll for ${k} of ${v} unable to be met by supplier")
+              }
+            }
+
+            payroll.keySet().each {
+              payroll.get(it).get()
+            }
+            theResponse = 'OK'
             break
           case Command.SEND_MONEY:
             def from = it.vals.from
@@ -58,5 +75,9 @@ class SupplierActor extends BaseEconActor{
   def shipItem(MarketActor destination, String product, int price) {
     destination.sendAndPromise(new Message(Command.STOCK_ITEM, [producer: this.uuid, product: product, price: price]) )
 
+  }
+
+  def getEmployeePayrole() {
+    return inputs.labor
   }
 }

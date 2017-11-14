@@ -49,18 +49,18 @@ class MarketActor extends BaseEconActor {
             break
 
           case Command.FULFILL_ORDER:
-            println("purchase => ${it.vals}")
+            //println("purchase => ${it.vals}")
             def params = it.vals
             def buyer = params.buyer
             def product = params.product
             def price = params.price
             def shelf = inventory.get(product)
-            println ("the shelf = ${shelf}")
+            //println ("the shelf = ${shelf}")
             if(shelf) {
               //now compare prices
               for(int i=0; i < shelf.size(); i ++) {
                 def prod = shelf.getAt(i)
-                println("item on shelf= ${prod}")
+              //  println("item on shelf= ${prod}")
                 if (prod[0] <= price) {
                   //we can purchase
 
@@ -92,7 +92,7 @@ class MarketActor extends BaseEconActor {
             def product = it.vals.product
             def shelf = this.inventory.get(product)
             def bestPrice
-            println("found shelf ${shelf} for product ${product}")
+          //  println("found shelf ${shelf} for product ${product}")
             if(shelf) {
 
               shelf.each {

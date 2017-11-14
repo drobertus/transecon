@@ -16,7 +16,8 @@ enum Command {
   PURCHASE_ITEM('purchase_item', ['market', 'product', 'price']), //purchaser, product, price
   FULFILL_ORDER('fulfill_order', ['buyer', 'product', 'price']),
   SEND_MONEY('send_money', ['from', 'amount', 'reason']),
-  STATUS('status')
+  STATUS('status'),
+  RUN_PAYROLL('run_payroll')
 
 
   def name

@@ -17,6 +17,7 @@ class TradeSpec extends Specification{
   def consumerLowPrice = 4
   def consumerEvenPrice = 5
   def consumerHighPrice = 6
+  def salary = 50
 
   Registry reg = Registry.instance
   @Shared MarketActor market
@@ -27,8 +28,8 @@ class TradeSpec extends Specification{
     market = new MarketActor(UUID.randomUUID())
     supplier = new SupplierActor(UUID.randomUUID())
     household = new HouseholdActor(UUID.randomUUID())
-    supplier.setMoney(50)
-    supplier
+    supplier.setMoney(500)
+    supplier.employHousehold(household.uuid, salary)
   }
 
   def cleanup() {
@@ -59,18 +60,22 @@ class TradeSpec extends Specification{
     then: //the purchase should fail for lack of money
     assert purchase.get() == "NSF"
 
-//    when: //the supplier pays labor to the household
+    when: //the supplier pays labor to the household
+    def pay = reg.messageActor(supplier.uuid, new Message(Command.RUN_PAYROLL))
 //    //TODO: how is labor/households mapped to suppliers?  How are wages set
 //
-//    then: //
+    then: //
+    pay.get() == 'OK'
+    household.money == salary
+    supplier.money == 500 - salary
 
     when: //the household purchases at full price
-    household.money = 10
     purchase =  reg.messageActor(household.uuid,
         new Message (Command.PURCHASE_ITEM, [product: product, price: this.consumerEvenPrice, market: market.uuid]))
 
     then: //the purchase should succeed
     assert purchase.get() == "OK"
+    assert household.resources.get(product) == 1
 
   }
 }
