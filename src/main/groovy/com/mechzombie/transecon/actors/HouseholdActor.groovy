@@ -12,7 +12,7 @@ class HouseholdActor extends BaseEconActor {
 
   HouseholdActor(UUID id) {
     super(id)
-    println("id ${id}")
+    println("HH ${id}")
   }
 
   @Override
@@ -99,13 +99,13 @@ class HouseholdActor extends BaseEconActor {
     //make calls to all markets and get prices
     def prices = [:]
     reg.getMarkets().each {
-    //  println("sending getPrice  to ${it.uuid}")
+      // println("sending getPrice  to ${it.uuid}")
       def priceProm = it.sendAndPromise(new Message(Command.PRICE_ITEM, [product: product]));
       prices.put(it.uuid, priceProm)
     }
     prices.each { k, v ->
       def aPrice = v.get()
-      //println("price found of ${aPrice}")
+      // println("price found of ${aPrice}")
       prices.put(k, aPrice)
     }
     return prices

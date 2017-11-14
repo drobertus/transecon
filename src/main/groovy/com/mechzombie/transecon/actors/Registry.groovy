@@ -1,8 +1,11 @@
 package com.mechzombie.transecon.actors
 
+import groovyx.gpars.group.DefaultPGroup
+
 @Singleton
 class Registry {
 
+  def pGroup = new DefaultPGroup(Runtime.getRuntime().availableProcessors())
   Map<UUID, BaseEconActor> actors = [:]
   def markets = []
 
@@ -10,7 +13,12 @@ class Registry {
   def addActor(BaseEconActor actor) {
     actors.put(actor.uuid, actor)
     if (actor instanceof MarketActor) markets << actor
-    actor.start()
+    actor.parallelGroup = pGroup
+    if (!actor.isActive()) {
+      actor.start()
+    }else {
+      println ("actor ${actor.uuid} was already active")
+    }
   }
 
   def messageActor(uuid, message){
@@ -22,9 +30,17 @@ class Registry {
   }
 
   def cleanup() {
+    markets = []
+   // actors = [:]
+    //pGroup.shutdown()
     actors.values().each {
-      it.stop()
+      try {
+        it.stop()
+      }catch(Exception e) {
+        e.printStackTrace()
+      }
       actors.remove(it)
     }
+
   }
 }

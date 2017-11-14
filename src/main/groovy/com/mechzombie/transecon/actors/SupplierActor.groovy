@@ -14,6 +14,7 @@ class SupplierActor extends BaseEconActor{
   SupplierActor(UUID id) {
     super(id)
     inputs.labor = [:]
+    println ("supplier ${uuid}")
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {

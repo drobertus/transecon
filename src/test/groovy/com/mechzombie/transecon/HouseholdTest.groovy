@@ -10,9 +10,10 @@ import spock.lang.Specification
 
 class HouseholdTest extends Specification {
 
-  @Shared hh = new HouseholdActor(UUID.randomUUID())
+  @Shared hh //= new HouseholdActor(UUID.randomUUID())
 
   def setup() {
+    hh = new HouseholdActor(UUID.randomUUID())
   }
 
   def cleanup() {

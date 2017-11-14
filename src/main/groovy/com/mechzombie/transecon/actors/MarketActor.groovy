@@ -10,7 +10,7 @@ class MarketActor extends BaseEconActor {
 
   MarketActor(UUID id) {
     super(id)
-    println("id ${id}")
+    println("market ${id}")
   }
 
   @Override

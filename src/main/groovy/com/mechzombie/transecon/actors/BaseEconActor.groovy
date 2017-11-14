@@ -15,8 +15,9 @@ abstract class BaseEconActor extends DefaultActor {
 
   BaseEconActor(UUID id) {
     this.uuid = id
+    //println "ID= ${this.uuid}"
     reg.addActor(this)
-    println "ID= ${this.uuid}"
+
   }
 
   abstract def status()
