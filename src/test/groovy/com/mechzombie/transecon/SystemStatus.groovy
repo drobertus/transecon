@@ -7,14 +7,11 @@ import com.mechzombie.transecon.actors.SupplierActor
 import spock.lang.Shared
 import spock.lang.Specification
 
-class SystemStatus extends Specification{
+class SystemStatus extends Specification {
 
   def product = 'beanbags'
   def producerPrice = 5
 
-  def consumerLowPrice = 4
-  def consumerEvenPrice = 5
-  def consumerHighPrice = 6
   def salary = 50
 
   Registry reg = Registry.instance
@@ -31,18 +28,20 @@ class SystemStatus extends Specification{
     household.setMoney(35)
     household.getResources().put('food', 8)
     household.getResources().put('housing', 3)
+    market.addProduct(supplier.uuid, product, producerPrice)
   }
 
   def cleanup() {
     reg.cleanup()
   }
 
-  def getCompleteSystemState() {
-
-
+  def "get Complete System State"() {
+    when:
     def sysState = reg.getSystemState()
+    println sysState
 
-
+    then:
+    sysState == "[system:[houseHolds:[[econactor:[type:class com.mechzombie.transecon.actors.HouseholdActor, id:${household.uuid}, requirements:[:], resources:[food:8, housing:3], money:35, transactions:[]]]], systemMarkets:[[econactor:[type:class com.mechzombie.transecon.actors.MarketActor, id:${market.uuid}, inventory:[beanbags:[[5, ${supplier.uuid}]]], money:0]]], theSuppliers:[[econactor:[type:class com.mechzombie.transecon.actors.SupplierActor, id:${supplier.uuid}, inputs:[labor:[${household.uuid}:50]], resources:[:], money:500, transactions:[]]]]]]"
   }
 
 

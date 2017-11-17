@@ -13,6 +13,16 @@ class MarketActor extends BaseEconActor {
     println("market ${id}")
   }
 
+  def addProduct(supplier, product, price) {
+    def shelf = inventory.get(product)
+    if(!shelf) {
+      shelf = []
+      inventory.put(product, shelf)
+    }
+    shelf << [price, supplier]
+    return shelf.size()
+  }
+
   @Override
   def status() {
     def status = builder.econactor {
@@ -20,7 +30,6 @@ class MarketActor extends BaseEconActor {
       id this.uuid
       inventory inventory
       money money
-      result result
     }
     println "here: ${status.toString()}"
     return status.toString()
@@ -39,13 +48,14 @@ class MarketActor extends BaseEconActor {
             def supplier = params.producer
             def product = params.product
             def price = params.price
-            def shelf = inventory.get(product)
-            if(!shelf) {
-              shelf = []
-              inventory.put(product, shelf)
-            }
-            shelf << [price, supplier]
-            theResponse = shelf.size()  //respond to the suplier with the number of items in invtentory
+
+//            def shelf = inventory.get(product)
+//            if(!shelf) {
+//              shelf = []
+//              inventory.put(product, shelf)
+//            }
+//            shelf << [price, supplier]
+            theResponse = addProduct(supplier, product, price) // shelf.size()  //respond to the suplier with the number of items in invtentory
             break
 
           case Command.FULFILL_ORDER:
@@ -106,7 +116,7 @@ class MarketActor extends BaseEconActor {
             }
 
             break
-          case 'status':
+          case Command.STATUS:
             theResponse = status()
             break
           default:

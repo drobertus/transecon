@@ -25,6 +25,7 @@ class HouseholdActor extends BaseEconActor {
         id this.uuid
         requirements this.demands
         resources this.resources
+        money this.money
         transactions this.transactions
       }
     }

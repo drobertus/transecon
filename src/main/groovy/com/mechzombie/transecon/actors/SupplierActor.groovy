@@ -23,7 +23,22 @@ class SupplierActor extends BaseEconActor{
 
   @Override
   def status() {
-    return null
+    def status
+    try {
+      status = builder.econactor {
+        type this.class
+        id this.uuid
+        inputs this.inputs
+        resources this.resources
+        money this.money
+        transactions this.transactions
+      }
+    }
+    catch(Exception e) {
+      println "err ${e}"
+    }
+    //println "here: ${status.toString()}"
+    return status.toString()
   }
 
   @Override
@@ -75,7 +90,6 @@ class SupplierActor extends BaseEconActor{
 
   def shipItem(MarketActor destination, String product, int price) {
     destination.sendAndPromise(new Message(Command.STOCK_ITEM, [producer: this.uuid, product: product, price: price]) )
-
   }
 
   def getEmployeePayrole() {
