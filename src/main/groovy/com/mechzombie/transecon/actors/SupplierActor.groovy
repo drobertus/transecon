@@ -11,10 +11,18 @@ class SupplierActor extends BaseEconActor{
   def resources = [:]
   def money = 0
 
+
   SupplierActor(UUID id) {
     super(id)
     inputs.labor = [:]
     println ("supplier ${uuid}")
+    this.stepList = [Command.RUN_PAYROLL,
+                     Command.CALC_DEMAND,
+                     Command.CALC_NEEDS,
+                     Command.PURCHASE_SUPPLIES,
+                     Command.PRODUCE_ITEMS,
+                     Command.SHIP_ITEMS]
+                     //Command.STOCK_ITEM]
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {
@@ -66,6 +74,7 @@ class SupplierActor extends BaseEconActor{
               payroll.get(it).get()
             }
             theResponse = 'OK'
+            this.completeStep(Command.RUN_PAYROLL)
             break
           case Command.SEND_MONEY:
             def from = it.vals.from
@@ -76,8 +85,34 @@ class SupplierActor extends BaseEconActor{
 
             theResponse = "OK"
             break
+          case Command.CALC_DEMAND:
+            this.completeStep(Command.CALC_DEMAND)
+            break
 
-          case 'run_turn':
+          case Command.CALC_NEEDS:
+            this.completeStep(Command.CALC_NEEDS)
+            break
+          case Command.PURCHASE_SUPPLIES:
+            this.completeStep(Command.PURCHASE_SUPPLIES)
+            break
+          case Command.PRODUCE_ITEMS:
+            this.completeStep(Command.PRODUCE_ITEMS)
+            break
+          case Command.SHIP_ITEMS:
+            this.completeStep(Command.SHIP_ITEMS)
+            break
+          case Command.TAKE_TURN:
+
+            this.currentTurnStatus = [:]
+
+            this.stepList.each {
+              println("adding ${it} to ${this.class}")
+              this.currentTurnStatus.put(it, 'incomplete')
+              reg.messageActor(this.uuid, new Message(it))
+            }
+            theResponse = 'messages fired'
+
+            break
           default:
             theResponse = "unrecognized Command"
             break

@@ -98,6 +98,9 @@ class MarketActor extends BaseEconActor {
               theResponse = '404'
             }
             break
+          case Command.TAKE_TURN:
+            theResponse = 'hhrutn.'
+            break
           case Command.PRICE_ITEM:
             def product = it.vals.product
             def shelf = this.inventory.get(product)

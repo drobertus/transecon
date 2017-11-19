@@ -86,6 +86,9 @@ class HouseholdActor extends BaseEconActor {
             }
             //this need to be done in line to prevent double dipping
             break
+          case Command.TAKE_TURN:
+            theResponse = 'hhrutn.'
+            break
           default:
             theResponse = "message not understood '${it}'"
             break

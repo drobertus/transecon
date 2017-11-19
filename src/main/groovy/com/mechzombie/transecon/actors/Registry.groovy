@@ -5,6 +5,8 @@ import com.mechzombie.transecon.messages.Message
 import groovy.json.JsonBuilder
 import groovyx.gpars.group.DefaultPGroup
 
+import static groovyx.gpars.GParsPool.withPool
+
 @Singleton
 class Registry {
 
@@ -14,6 +16,7 @@ class Registry {
   def suppliers = []
   def households = []
 
+  def turnNumber = 0
 
   def addActor(BaseEconActor actor) {
     actors.put(actor.uuid, actor)
@@ -34,6 +37,24 @@ class Registry {
 
   MarketActor[] getMarkets() {
     return markets
+  }
+
+  /**
+   * A blocking call- will block until all actors complete a turn
+   */
+  def runTurn() {
+    def turnStatus = []
+    turnNumber ++
+    Message turnMsg = new Message(Command.TAKE_TURN, [turnNum: turnNumber])
+
+    actors.each () { k, v ->
+      println "adding ${k}"
+      turnStatus << messageActor(k, turnMsg)
+    }
+
+
+    //block until turn completes
+    return turnStatus
   }
 
   def getSystemState() {
@@ -68,6 +89,8 @@ class Registry {
 
   def cleanup() {
     markets = []
+    suppliers = []
+    households = []
    // actors = [:]
     //pGroup.shutdown()
     actors.values().each {
