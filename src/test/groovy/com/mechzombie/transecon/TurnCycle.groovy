@@ -11,7 +11,7 @@ import spock.lang.Specification
 
 class TurnCycle extends Specification {
 
-  def product = 'beanbags'
+  def product = 'food'
   def producerPrice = 5
 
   def consumerLowPrice = 4
@@ -24,12 +24,22 @@ class TurnCycle extends Specification {
   @Shared SupplierActor supplier
   @Shared HouseholdActor household
 
+  Map hhDemand = [food: 2, housing: 3]
+  Map hhResources = [food:1]
+
+  def inputsPerUnit = [iron: 0.1, corn: 1, labor: 1]
+
   def setup() {
     market = new MarketActor(UUID.randomUUID())
-    supplier = new SupplierActor(UUID.randomUUID())
-    household = new HouseholdActor(UUID.randomUUID())
+
+    household = new HouseholdActor(UUID.randomUUID(), hhDemand, hhResources)
+    supplier = new SupplierActor(UUID.randomUUID(), product, inputsPerUnit, [iron: 10, corn: 50], ["${household.uuid.toString()}": salary])
+
     supplier.setMoney(500)
-    supplier.employHousehold(household.uuid, salary)
+  }
+
+  def cleanup() {
+    reg.cleanup()
   }
 
   def "run a turn"() {
@@ -39,8 +49,7 @@ class TurnCycle extends Specification {
     def endState = reg.runTurn()
 
     then:
-    println "endState= ${endState}"
-
+   // println "endState= ${endState}"
     endState.each() {
       assert it.get() != null
       println("result = ${it.get()}")
@@ -48,12 +57,20 @@ class TurnCycle extends Specification {
     }
     when:
     def counter = 0
-    while(supplier.turnStatus() != 'complete'){
-      println("waiting ${counter+ 20}ms to complete") // ${supplier.turnStatus()}")
+    def supStat = supplier.turnStatus()
+    def hhStat = household.turnStatus()
+
+    while(!(supStat.equals('complete')) || !(hhStat.equals('complete'))) {
+      println("------  waiting ${counter+ 20}ms to complete ${supStat} ${hhStat}") // ${supplier.turnStatus()}")
       sleep(20)
+      supStat = supplier.turnStatus()
+      hhStat = household.turnStatus()
+
     }
     then:
-    supplier.turnStatus() == 'complete'
+    supStat == 'complete'
+    hhStat == 'complete'
+    assert household.turnNeeds == [housing:3, food: 1]
 
   }
 

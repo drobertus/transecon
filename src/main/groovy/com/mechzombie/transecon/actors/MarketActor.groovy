@@ -13,7 +13,7 @@ class MarketActor extends BaseEconActor {
     println("market ${id}")
   }
 
-  def addProduct(supplier, product, price) {
+  private def addProduct(supplier, product, price) {
     def shelf = inventory.get(product)
     if(!shelf) {
       shelf = []
@@ -130,5 +130,11 @@ class MarketActor extends BaseEconActor {
         reply theResponse
       }
     }
+  }
+
+  @Override
+  def clear() {
+    inventory.clear()
+    this.money = 0
   }
 }

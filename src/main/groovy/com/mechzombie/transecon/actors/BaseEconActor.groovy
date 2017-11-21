@@ -3,8 +3,10 @@ package com.mechzombie.transecon.actors
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import groovy.json.JsonBuilder
+import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
 
+@Slf4j
 abstract class BaseEconActor extends DefaultActor {
 
   def lastCompletedTurn = 0
@@ -25,6 +27,9 @@ abstract class BaseEconActor extends DefaultActor {
   def getSteps() {
     return stepList
   }
+
+  abstract def clear()
+
   def completeStep(step) {
 
     def found = currentTurnStatus.get(step)
@@ -32,7 +37,8 @@ abstract class BaseEconActor extends DefaultActor {
       currentTurnStatus.put(step, 'complete')
       println("completing step ${step}, ${this.currentTurnStatus}")
     } else {
-      throw Exception("step ${step.toString()} not found for ${this.class}".toString())
+      println("steps are : ${currentTurnStatus}")
+      throw new Exception("step ${step.toString()} not found for ${this.class}".toString())
     }
   }
 
@@ -50,6 +56,24 @@ abstract class BaseEconActor extends DefaultActor {
     }
     return 'incomplete - mismatch'
     //return currentStepStatus
+  }
+
+
+  protected resetTurnStatus() {
+    currentTurnStatus = [:]
+    println("steps = ${stepList}")
+    stepList.each {
+      println("adding ${it} to ${this.class}")
+      currentTurnStatus.put(it, 'incomplete')
+      reg.messageActor(this.uuid, new Message(it))
+    }
+  }
+
+  protected def runTurn() {
+
+    resetTurnStatus()
+    return 'messages fired'
+
   }
 
   int lastCompletedTurn() {

@@ -2,16 +2,25 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
-import groovy.json.JsonBuilder
+import groovy.util.logging.Slf4j
 
+@Slf4j
 class HouseholdActor extends BaseEconActor {
 
   def demands = [:] //this that the household needs per unit time
   def resources = [:] //this owned by or produced by the household per unit time
   def money = 0
 
-  HouseholdActor(UUID id) {
+  def turnNeeds = [:]
+  HouseholdActor(UUID id, Map demands = [:], Map resources = [:]) {
     super(id)
+    setDemands demands
+    setResources(resources)
+    this.stepList = [Command.CALC_NEEDS,
+                     Command.FINANCE_TURN,
+                     Command.PURCHASE_SUPPLIES,
+                     Command.CONSUME]
+    resetTurnStatus()
     println("HH ${id}")
   }
 
@@ -26,7 +35,7 @@ class HouseholdActor extends BaseEconActor {
         requirements this.demands
         resources this.resources
         money this.money
-        transactions this.transactions
+        //transactions this.transactions
       }
     }
     catch(Exception e) {
@@ -51,6 +60,27 @@ class HouseholdActor extends BaseEconActor {
             theResponse = status()
             println "status = ${theResponse}"
             break
+          case Command.CALC_NEEDS:
+            //loop through demands, compare to resources
+            turnNeeds = [:]
+            this.demands.each {k, v ->
+              turnNeeds.put(k, v - (resources.get(k) ? resources.get(k) : 0 ))
+            }
+            this.completeStep(Command.CALC_NEEDS)
+            break
+          case Command.FINANCE_TURN:
+
+            this.completeStep(Command.FINANCE_TURN)
+            break
+          case Command.PURCHASE_SUPPLIES:
+
+            this.completeStep(Command.PURCHASE_SUPPLIES)
+            break
+          case Command.CONSUME:
+
+            this.completeStep(Command.CONSUME)
+            break
+
           case Command.SEND_MONEY:
             def from = it.vals.from
             def amount = it.vals.amount
@@ -87,10 +117,12 @@ class HouseholdActor extends BaseEconActor {
             //this need to be done in line to prevent double dipping
             break
           case Command.TAKE_TURN:
-            theResponse = 'hhrutn.'
+            theResponse = runTurn()
             break
           default:
-            theResponse = "message not understood '${it}'"
+            def msg = "message not understood '${it.type}'"
+            println msg
+            theResponse = msg
             break
         }
         reply theResponse
@@ -119,5 +151,10 @@ class HouseholdActor extends BaseEconActor {
     return reg.messageActor(market, new Message(Command.FULFILL_ORDER, [buyer: this.uuid, product: product, price: price]))
   }
 
-
+  @Override
+  def clear() {
+    demands.clear()
+    this.resources.clear()
+    this.money = 0
+  }
 }

@@ -2,19 +2,25 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import groovy.util.logging.Slf4j
 
-
+@Slf4j
 class SupplierActor extends BaseEconActor{
 
-  def output
+  def product
   def inputs = [:]
   def resources = [:]
+  def employees = [:]
   def money = 0
 
 
-  SupplierActor(UUID id) {
+  SupplierActor(UUID id, product, inputsPerUnit = [:], resources =[:], employees = [:]) {
     super(id)
-    inputs.labor = [:]
+    this.product = product
+    this.employees = employees
+    this.inputs = inputsPerUnit
+    this.resources = resources
+
     println ("supplier ${uuid}")
     this.stepList = [Command.RUN_PAYROLL,
                      Command.CALC_DEMAND,
@@ -23,10 +29,11 @@ class SupplierActor extends BaseEconActor{
                      Command.PRODUCE_ITEMS,
                      Command.SHIP_ITEMS]
                      //Command.STOCK_ITEM]
+    resetTurnStatus()
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {
-    getEmployeePayrole().put(uuid, monthlyWage)
+    this.employees.put(uuid.toString(), monthlyWage)
   }
 
   @Override
@@ -36,16 +43,16 @@ class SupplierActor extends BaseEconActor{
       status = builder.econactor {
         type this.class
         id this.uuid
-        inputs this.inputs
+        perUnitInputs this.inputs
         resources this.resources
+        employees this.employees
         money this.money
-        transactions this.transactions
+        //transactions this.transactions
       }
     }
     catch(Exception e) {
       println "err ${e}"
     }
-    //println "here: ${status.toString()}"
     return status.toString()
   }
 
@@ -61,17 +68,21 @@ class SupplierActor extends BaseEconActor{
             break
           case Command.RUN_PAYROLL:
             def payroll = [:]
-            getEmployeePayrole().each { k, v ->
+
+            //TODO: move payment calc to CALC_NEEDS
+            employees.each { k, v ->
+              println("-----key = ${k}, amount= ${v}")
               if (money > v) {
-                payroll.put(k, sendMoney(k, v, 'payroll'))
+                println("sending money!")
+                payroll.put(k, sendMoney(UUID.fromString(k), v, 'payroll'))
                 money -= v
               }else {
                 println("Payroll for ${k} of ${v} unable to be met by supplier")
               }
             }
 
-            payroll.keySet().each {
-              payroll.get(it).get()
+            payroll.values().each {
+              println("got payroll response --" && it.get())
             }
             theResponse = 'OK'
             this.completeStep(Command.RUN_PAYROLL)
@@ -90,6 +101,9 @@ class SupplierActor extends BaseEconActor{
             break
 
           case Command.CALC_NEEDS:
+            // analyze - cash on hand, current payroll, supply costs, expected income
+            def neededPayroll, neededSupplyCosts, expectedIncome
+
             this.completeStep(Command.CALC_NEEDS)
             break
           case Command.PURCHASE_SUPPLIES:
@@ -103,14 +117,14 @@ class SupplierActor extends BaseEconActor{
             break
           case Command.TAKE_TURN:
 
-            this.currentTurnStatus = [:]
+//            this.currentTurnStatus = [:]
+//            this.stepList.each {
+//              println("adding ${it} to ${this.class}")
+//              this.currentTurnStatus.put(it, 'incomplete')
+//              reg.messageActor(this.uuid, new Message(it))
+//            }
 
-            this.stepList.each {
-              println("adding ${it} to ${this.class}")
-              this.currentTurnStatus.put(it, 'incomplete')
-              reg.messageActor(this.uuid, new Message(it))
-            }
-            theResponse = 'messages fired'
+            theResponse = runTurn()
 
             break
           default:
@@ -127,7 +141,11 @@ class SupplierActor extends BaseEconActor{
     destination.sendAndPromise(new Message(Command.STOCK_ITEM, [producer: this.uuid, product: product, price: price]) )
   }
 
-  def getEmployeePayrole() {
-    return inputs.labor
+  @Override
+  def clear() {
+    this.employees.clear()
+    this.resources.clear()
+    this.money = 0
   }
+
 }

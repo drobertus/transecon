@@ -33,7 +33,7 @@ class HouseholdTest extends Specification {
     then:
     println response
     response == '[econactor:[type:class com.mechzombie.transecon.actors.HouseholdActor, id:' +
-      hh.uuid + ', requirements:[:], resources:[:], money:0, transactions:[]]]'
+      hh.uuid + ', requirements:[:], resources:[:], money:0]]'
 
   }
 

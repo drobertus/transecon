@@ -3,10 +3,12 @@ package com.mechzombie.transecon.actors
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import groovy.json.JsonBuilder
+import groovy.util.logging.Slf4j
 import groovyx.gpars.group.DefaultPGroup
 
 import static groovyx.gpars.GParsPool.withPool
 
+@Slf4j
 @Singleton
 class Registry {
 
@@ -46,11 +48,13 @@ class Registry {
     def turnStatus = []
     turnNumber ++
     Message turnMsg = new Message(Command.TAKE_TURN, [turnNum: turnNumber])
-
-    actors.each () { k, v ->
-      println "adding ${k}"
-      turnStatus << messageActor(k, turnMsg)
-    }
+    //TODO: this needs to be non-blocking
+    withPool(Runtime.runtime.availableProcessors(), {
+      actors.eachParallel() { k, v ->
+        println "adding ${k}"
+        turnStatus << messageActor(k, turnMsg)
+      }
+    })
 
 
     //block until turn completes
@@ -95,6 +99,7 @@ class Registry {
     //pGroup.shutdown()
     actors.values().each {
       try {
+        it.clear()
         it.stop()
       }catch(Exception e) {
         e.printStackTrace()

@@ -26,7 +26,7 @@ class TradeSpec extends Specification{
 
   def setup() {
     market = new MarketActor(UUID.randomUUID())
-    supplier = new SupplierActor(UUID.randomUUID())
+    supplier = new SupplierActor(UUID.randomUUID(), product)
     household = new HouseholdActor(UUID.randomUUID())
     supplier.setMoney(500)
     supplier.employHousehold(household.uuid, salary)
@@ -44,9 +44,10 @@ class TradeSpec extends Specification{
     prom.get()  == 1
     market.inventory.get(product) != null
     market.inventory.get(product).size() == 1
-
+    household.getMoney() == 0
     when: //the household inspects all markets for that product
     def prices = household.getPrices(product)
+    println "prices ${prices}"
 
     then: //the market should have that product at the expected price
     assert prices.size() == 1

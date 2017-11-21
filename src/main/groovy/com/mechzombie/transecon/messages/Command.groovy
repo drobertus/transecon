@@ -22,7 +22,9 @@ enum Command {
   CALC_NEEDS('calc_needs'),
   PURCHASE_SUPPLIES('purchae_supplies'),
   PRODUCE_ITEMS('produce_items'),
-  SHIP_ITEMS('ship_items')
+  SHIP_ITEMS('ship_items'),
+  FINANCE_TURN('finance_turn'),
+  CONSUME('consume')
 
 
   def name
