@@ -35,9 +35,9 @@ abstract class BaseEconActor extends DefaultActor {
     def found = currentTurnStatus.get(step)
     if(found != null) {
       currentTurnStatus.put(step, 'complete')
-      println("completing step ${step}, ${this.currentTurnStatus}")
+      log.info("completing step ${step}, ${this.currentTurnStatus}")
     } else {
-      println("steps are : ${currentTurnStatus}")
+      log.error("step ${step.toString()} not found for ${this.class}- available steps are ${this.stepList}".toString())
       throw new Exception("step ${step.toString()} not found for ${this.class}".toString())
     }
   }
@@ -47,7 +47,6 @@ abstract class BaseEconActor extends DefaultActor {
     if (currentTurnStatus.size() == stepList.size()){
       currentTurnStatus.each {k,v ->
         if (v != 'complete'){
-          //println("${k} was not complete")
           status = 'incomplete';
         }
       }
@@ -55,25 +54,25 @@ abstract class BaseEconActor extends DefaultActor {
       return status
     }
     return 'incomplete - mismatch'
-    //return currentStepStatus
   }
 
-
+  /**
+   * This is called to start a new turn and refreshes the status of existing steps
+   * @return
+   */
   protected resetTurnStatus() {
     currentTurnStatus = [:]
-    println("steps = ${stepList}")
     stepList.each {
-      println("adding ${it} to ${this.class}")
       currentTurnStatus.put(it, 'incomplete')
-      reg.messageActor(this.uuid, new Message(it))
     }
   }
 
   protected def runTurn() {
-
     resetTurnStatus()
+    stepList.each {
+      reg.messageActor(this.uuid, new Message(it))
+    }
     return 'messages fired'
-
   }
 
   int lastCompletedTurn() {

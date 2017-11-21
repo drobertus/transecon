@@ -21,7 +21,7 @@ class SupplierActor extends BaseEconActor{
     this.inputs = inputsPerUnit
     this.resources = resources
 
-    println ("supplier ${uuid}")
+    //println ("supplier ${uuid}")
     this.stepList = [Command.RUN_PAYROLL,
                      Command.CALC_DEMAND,
                      Command.CALC_NEEDS,
@@ -30,6 +30,7 @@ class SupplierActor extends BaseEconActor{
                      Command.SHIP_ITEMS]
                      //Command.STOCK_ITEM]
     resetTurnStatus()
+    log.info("Created Household ${id}")
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {

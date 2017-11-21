@@ -47,7 +47,6 @@ class TradeSpec extends Specification{
     household.getMoney() == 0
     when: //the household inspects all markets for that product
     def prices = household.getPrices(product)
-    println "prices ${prices}"
 
     then: //the market should have that product at the expected price
     assert prices.size() == 1

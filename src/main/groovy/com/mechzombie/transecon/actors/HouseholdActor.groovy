@@ -20,13 +20,13 @@ class HouseholdActor extends BaseEconActor {
                      Command.FINANCE_TURN,
                      Command.PURCHASE_SUPPLIES,
                      Command.CONSUME]
+    this
     resetTurnStatus()
-    println("HH ${id}")
+    log.info("Created Household ${id}")
   }
 
   @Override
   def status() {
-    //println('getting status')
     def status
     try {
       status = builder.econactor {
@@ -35,13 +35,11 @@ class HouseholdActor extends BaseEconActor {
         requirements this.demands
         resources this.resources
         money this.money
-        //transactions this.transactions
       }
     }
     catch(Exception e) {
-      println "err ${e}"
+      log.error(e)
     }
-    //println "here: ${status.toString()}"
     return status.toString()
   }
 
@@ -51,14 +49,14 @@ class HouseholdActor extends BaseEconActor {
 
       react {
         def theResponse
-        println "HouseHold ${this.uuid} received ${it.type}"
+        log.debug "HouseHold ${this.uuid} received ${it.type}"
         switch (it.type) {
           case String:
             theResponse = "Woohoo!!"
             break
           case Command.STATUS:
             theResponse = status()
-            println "status = ${theResponse}"
+            //println "status = ${theResponse}"
             break
           case Command.CALC_NEEDS:
             //loop through demands, compare to resources
@@ -104,7 +102,6 @@ class HouseholdActor extends BaseEconActor {
                 }
                 prodCount++
                 resources.put(prod, prodCount)
-
                 theResponse = "OK"
               }
               else {
@@ -120,8 +117,8 @@ class HouseholdActor extends BaseEconActor {
             theResponse = runTurn()
             break
           default:
-            def msg = "message not understood '${it.type}'"
-            println msg
+            def msg = "message not understood '${it.type}' for class ${this.class} instance ${uuid}"
+            log.error msg
             theResponse = msg
             break
         }
