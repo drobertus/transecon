@@ -12,7 +12,8 @@ class HouseholdActor extends BaseEconActor {
   def money = 0
 
   def turnNeeds = [:]
-  HouseholdActor(UUID id, Map demands = [:], Map resources = [:]) {
+
+  HouseholdActor(UUID id = UUID.randomUUID(), Map demands = [:], Map resources = [:]) {
     super(id)
     setDemands demands
     setResources(resources)
@@ -40,7 +41,7 @@ class HouseholdActor extends BaseEconActor {
     catch(Exception e) {
       log.error(e)
     }
-    return status.toString()
+    return status
   }
 
   @Override

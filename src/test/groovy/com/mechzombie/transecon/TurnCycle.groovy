@@ -9,7 +9,7 @@ import com.mechzombie.transecon.messages.Message
 import spock.lang.Shared
 import spock.lang.Specification
 
-class TurnCycle extends Specification {
+class TurnCycle extends BaseActorTest {
 
   def product = 'food'
   def producerPrice = 5
@@ -19,7 +19,6 @@ class TurnCycle extends Specification {
   def consumerHighPrice = 6
   def salary = 50
 
-  Registry reg = Registry.instance
   @Shared MarketActor market
   @Shared SupplierActor supplier
   @Shared HouseholdActor household
@@ -36,10 +35,6 @@ class TurnCycle extends Specification {
     supplier = new SupplierActor(UUID.randomUUID(), product, inputsPerUnit, [iron: 10, corn: 50], ["${household.uuid.toString()}": salary])
 
     supplier.setMoney(500)
-  }
-
-  def cleanup() {
-    reg.cleanup()
   }
 
   def "run a turn"() {
@@ -71,6 +66,7 @@ class TurnCycle extends Specification {
     supStat == 'complete'
     hhStat == 'complete'
     assert household.turnNeeds == [housing:3, food: 1]
+    assert supplier.productionGoalForTurn == 1
 
   }
 

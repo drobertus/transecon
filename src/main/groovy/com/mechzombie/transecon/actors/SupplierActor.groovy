@@ -13,8 +13,12 @@ class SupplierActor extends BaseEconActor{
   def employees = [:]
   def money = 0
 
+  def productionGoalForTurn
+  def toBePurchasedForProductionGoal
 
-  SupplierActor(UUID id, product, inputsPerUnit = [:], resources =[:], employees = [:]) {
+  def sales
+
+  SupplierActor(UUID id=UUID.randomUUID(), product, inputsPerUnit = [:], resources =[:], employees = [:]) {
     super(id)
     this.product = product
     this.employees = employees
@@ -22,12 +26,14 @@ class SupplierActor extends BaseEconActor{
     this.resources = resources
 
     //println ("supplier ${uuid}")
-    this.stepList = [Command.RUN_PAYROLL,
-                     Command.CALC_DEMAND,
-                     Command.CALC_NEEDS,
-                     Command.PURCHASE_SUPPLIES,
-                     Command.PRODUCE_ITEMS,
-                     Command.SHIP_ITEMS]
+    this.stepList = [
+        Command.CALC_NEEDS,
+        Command.FINANCE_TURN,
+        //Command.CALC_DEMAND,
+        Command.RUN_PAYROLL,
+        Command.PURCHASE_SUPPLIES,
+        Command.PRODUCE_ITEMS,
+        Command.SHIP_ITEMS]
                      //Command.STOCK_ITEM]
     resetTurnStatus()
     log.info("Created Household ${id}")
@@ -62,7 +68,7 @@ class SupplierActor extends BaseEconActor{
     loop {
       react {
         def theResponse
-        println "Supplier ${this.uuid} received ${it.type}"
+        log.info "Supplier ${this.uuid} received ${it.type}"
         switch (it.type) {
           case Command.STATUS:
             theResponse = status()
@@ -97,21 +103,78 @@ class SupplierActor extends BaseEconActor{
 
             theResponse = "OK"
             break
-          case Command.CALC_DEMAND:
-            this.completeStep(Command.CALC_DEMAND)
-            break
-
           case Command.CALC_NEEDS:
-            // analyze - cash on hand, current payroll, supply costs, expected income
-            def neededPayroll, neededSupplyCosts, expectedIncome
+
+            def salaries = 0
+            employees.each { k, v ->
+              salaries += v
+            }
+            def laborAvailableAtTurn = employees.size()
+
+            //find the limiting factor for input
+
+            def limitingRatios = [:]
+            inputs.each { k, v ->
+              def onHand = resources.get(k)
+              if (k == 'labor') {
+                onHand = laborAvailableAtTurn
+              }
+              def ratio  = (onHand / v)
+
+              limitingRatios.put(k, ratio)
+            }
+
+            println("ratios unsorted ${limitingRatios}")
+            def sorted = limitingRatios.sort { it.value }
+            println("ratios sorted ${sorted}")
+
+            //now get all the ones with the first value.
+            //if 0 then...?
+            // TODO: need a turn production target! Count of units expected to be produced in this turn
+            //map of needed type of products and valoume that need to be purchased
+            // will be empty is all on hand
+            this.toBePurchasedForProductionGoal = [:]
+
+            this.productionGoalForTurn = 1
+
+
+            // look at resources
+            // look at labor
+            // look at input costs
+            // determine what to buy to maximize production
+
+            // TODO: find cost minimization strategy
+
+
+
+            // look at payroll demands
+            // cost of inputs
+            // expected income?
+            // cost for shipment?s
+
 
             this.completeStep(Command.CALC_NEEDS)
             break
+
           case Command.PURCHASE_SUPPLIES:
+
+            //given what is needed to fill the gap to produce, make outlays to fill in the gaps
+
             this.completeStep(Command.PURCHASE_SUPPLIES)
             break
           case Command.PRODUCE_ITEMS:
+
+            //create new things, remove avilable resources that are converted, including labor
+            //(fixed things as well as time-sensitive things RE: labor)
+
             this.completeStep(Command.PRODUCE_ITEMS)
+            break
+          case Command.FINANCE_TURN:
+            // eval cash on hand - payroll - expenses needed for production ( plus expected income?)
+            // take out loan
+            // TODO: include loan financing as part of cost structure
+
+            this.completeStep(Command.FINANCE_TURN)
             break
           case Command.SHIP_ITEMS:
             this.completeStep(Command.SHIP_ITEMS)
@@ -125,6 +188,11 @@ class SupplierActor extends BaseEconActor{
 //              reg.messageActor(this.uuid, new Message(it))
 //            }
 
+
+            // reset turn parameters
+            this.toBePurchasedForProductionGoal = [:]
+
+            this.productionGoalForTurn = 1
             theResponse = runTurn()
 
             break

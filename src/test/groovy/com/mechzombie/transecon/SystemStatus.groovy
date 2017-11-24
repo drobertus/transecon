@@ -7,14 +7,13 @@ import com.mechzombie.transecon.actors.SupplierActor
 import spock.lang.Shared
 import spock.lang.Specification
 
-class SystemStatus extends Specification {
+class SystemStatus extends BaseActorTest {
 
   def product = 'beanbags'
   def producerPrice = 5
 
   def salary = 50
 
-  Registry reg = Registry.instance
   @Shared MarketActor market
   @Shared SupplierActor supplier
   @Shared HouseholdActor household
@@ -29,10 +28,6 @@ class SystemStatus extends Specification {
     household.getResources().put('food', 8)
     household.getResources().put('housing', 3)
     market.addProduct(supplier.uuid, product, producerPrice)
-  }
-
-  def cleanup() {
-    reg.cleanup()
   }
 
   def "get Complete System State"() {

@@ -8,17 +8,14 @@ import groovy.json.JsonSlurper
 import spock.lang.Shared
 import spock.lang.Specification
 
-class HouseholdTest extends Specification {
+class HouseholdTest extends BaseActorTest {
 
-  @Shared hh //= new HouseholdActor(UUID.randomUUID())
+  @Shared hh
 
   def setup() {
     hh = new HouseholdActor(UUID.randomUUID())
   }
 
-  def cleanup() {
-    Registry.instance.cleanup()
-  }
   //start an actor and message it
   def "handling basic messages"() {
 
@@ -32,7 +29,7 @@ class HouseholdTest extends Specification {
     response = hh.sendAndWait(new Message(Command.STATUS))
     then:
     println response
-    response == '[econactor:[type:class com.mechzombie.transecon.actors.HouseholdActor, id:' +
+    response.toString() == '[econactor:[type:class com.mechzombie.transecon.actors.HouseholdActor, id:' +
       hh.uuid + ', requirements:[:], resources:[:], money:0]]'
 
   }

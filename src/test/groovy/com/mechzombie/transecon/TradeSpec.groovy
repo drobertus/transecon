@@ -9,7 +9,7 @@ import com.mechzombie.transecon.messages.Message
 import spock.lang.Shared
 import spock.lang.Specification
 
-class TradeSpec extends Specification{
+class TradeSpec extends BaseActorTest {
 
   def product = 'beanbags'
   def producerPrice = 5
@@ -19,21 +19,16 @@ class TradeSpec extends Specification{
   def consumerHighPrice = 6
   def salary = 50
 
-  Registry reg = Registry.instance
   @Shared MarketActor market
   @Shared SupplierActor supplier
   @Shared HouseholdActor household
 
   def setup() {
-    market = new MarketActor(UUID.randomUUID())
-    supplier = new SupplierActor(UUID.randomUUID(), product)
-    household = new HouseholdActor(UUID.randomUUID())
+    market = new MarketActor()
+    supplier = new SupplierActor( product)
+    household = new HouseholdActor()
     supplier.setMoney(500)
     supplier.employHousehold(household.uuid, salary)
-  }
-
-  def cleanup() {
-    reg.cleanup()
   }
 
   def tradeTest () {

@@ -51,7 +51,7 @@ class Registry {
     //TODO: this needs to be non-blocking
     withPool(Runtime.runtime.availableProcessors(), {
       actors.eachParallel() { k, v ->
-        println "adding ${k}"
+        log.info "adding ${k}"
         turnStatus << messageActor(k, turnMsg)
       }
     })

@@ -2,15 +2,17 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import groovy.util.logging.Slf4j
 
+@Slf4j
 class MarketActor extends BaseEconActor {
 
   def inventory = [:] //products, grouped  by type, ordered  by price.  buy the cheap one first (for now)
   def money = 0
 
-  MarketActor(UUID id) {
+  MarketActor(UUID id = UUID.randomUUID()) {
     super(id)
-    println("market ${id}")
+    log.info("Created Market ${id}")
   }
 
   private def addProduct(supplier, product, price) {
@@ -31,7 +33,7 @@ class MarketActor extends BaseEconActor {
       inventory inventory
       money money
     }
-    println "here: ${status.toString()}"
+    log.debug "here: ${status.toString()}"
     return status.toString()
   }
 
@@ -40,7 +42,7 @@ class MarketActor extends BaseEconActor {
     loop {
       react {
         def theResponse
-        println("market actor ${this.uuid} got message ${it.type} , ${it.vals}")
+        log.info("market actor ${this.uuid} got message ${it.type} , ${it.vals}")
         switch (it.type) {
           case Command.STOCK_ITEM:
 
@@ -127,6 +129,7 @@ class MarketActor extends BaseEconActor {
             break
         }
 
+        log.info("actor: ${uuid}, theResponse: ${theResponse}")
         reply theResponse
       }
     }

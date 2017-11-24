@@ -18,10 +18,9 @@ abstract class BaseEconActor extends DefaultActor {
   UUID uuid
   def transactions = []
 
-  BaseEconActor(UUID id) {
+  BaseEconActor(UUID id = UUID.randomUUID()) {
     this.uuid = id
     reg.addActor(this)
-
   }
 
   def getSteps() {
