@@ -2,13 +2,13 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.resources.Bank
 import groovy.util.logging.Slf4j
 
 @Slf4j
 class MarketActor extends BaseEconActor {
 
   def inventory = [:] //products, grouped  by type, ordered  by price.  buy the cheap one first (for now)
-  def money = 0
 
   MarketActor(UUID id = UUID.randomUUID()) {
     super(id)
@@ -31,7 +31,7 @@ class MarketActor extends BaseEconActor {
       type this.class
       id this.uuid
       inventory inventory
-      money money
+      money Bank.getAccountValue(this.uuid)
     }
     log.debug "here: ${status.toString()}"
     return status.toString()
@@ -77,11 +77,13 @@ class MarketActor extends BaseEconActor {
                   //we can purchase
 
                   def margin = price - prod[0]
-                  this.money += margin
+                  Bank.deposit(this.uuid, margin)
+                //  this.money += margin
                   //message the producer with the amount, keep the difference
                   def producer = prod[1]
                   def send = this.sendMoney(producer, (int)prod[0], 'sale')
-                  if(send.get() == 'OK') {
+                  println("---- sendMoney ${send}")
+                  if(send) {
                     theResponse = "OK"
                     shelf.remove(i)
                     break
@@ -138,6 +140,5 @@ class MarketActor extends BaseEconActor {
   @Override
   def clear() {
     inventory.clear()
-    this.money = 0
   }
 }

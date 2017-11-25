@@ -6,6 +6,7 @@ import com.mechzombie.transecon.actors.Registry
 import com.mechzombie.transecon.actors.SupplierActor
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.resources.Bank
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -27,7 +28,7 @@ class TradeSpec extends BaseActorTest {
     market = new MarketActor()
     supplier = new SupplierActor( product)
     household = new HouseholdActor()
-    supplier.setMoney(500)
+    Bank.deposit(supplier.uuid, 500)
     supplier.employHousehold(household.uuid, salary)
   }
 
@@ -39,7 +40,7 @@ class TradeSpec extends BaseActorTest {
     prom.get()  == 1
     market.inventory.get(product) != null
     market.inventory.get(product).size() == 1
-    household.getMoney() == 0
+    Bank.getAccountValue( household.uuid) == 0
     when: //the household inspects all markets for that product
     def prices = household.getPrices(product)
 
@@ -61,8 +62,8 @@ class TradeSpec extends BaseActorTest {
 //
     then: //
     pay.get() == 'OK'
-    household.money == salary
-    supplier.money == 500 - salary
+    household.getBankBalance() == salary
+    supplier.getBankBalance() == 500 - salary
 
     when: //the household purchases at full price
     purchase =  reg.messageActor(household.uuid,

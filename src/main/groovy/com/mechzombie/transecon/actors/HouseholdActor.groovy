@@ -2,6 +2,7 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.resources.Bank
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -9,7 +10,7 @@ class HouseholdActor extends BaseEconActor {
 
   def demands = [:] //this that the household needs per unit time
   def resources = [:] //this owned by or produced by the household per unit time
-  def money = 0
+  //def money = 0
 
   def turnNeeds = [:]
 
@@ -28,6 +29,8 @@ class HouseholdActor extends BaseEconActor {
 
   @Override
   def status() {
+    def moneyAcct = Bank.getAccountValue(this.uuid)
+    println(moneyAcct)
     def status
     try {
       status = builder.econactor {
@@ -35,11 +38,11 @@ class HouseholdActor extends BaseEconActor {
         id this.uuid
         requirements this.demands
         resources this.resources
-        money this.money
+        money moneyAcct
       }
     }
     catch(Exception e) {
-      log.error(e)
+      log.error(e.toString())
     }
     return status
   }
@@ -86,6 +89,8 @@ class HouseholdActor extends BaseEconActor {
             money += amount
             def reason = it.vals.reason
 
+            def sent = Bank.transferFunds(this.privateUUID, from)
+
             theResponse = "OK"
             break
           case Command.PURCHASE_ITEM:
@@ -93,10 +98,18 @@ class HouseholdActor extends BaseEconActor {
             def price = it.vals.price
             def market = it.vals.market
 
-            if (price <= this.money) {
+            def theHold = Bank.holdDebitAmount(this.uuid, price)
+            println("theHold = ${theHold}")
+            if(theHold != null ) {
+
+            //if (price <= this.money) {
               def response = purchaseItem(prod, price, market)
+
               if (response.get() == 'OK') {
-                money -= price
+
+
+                println("completeDebit= ${Bank.completeDebit(theHold)}")
+              //  money -= price
                 def prodCount = resources.get(prod)
                 if(!prodCount) {
                   prodCount = 0
@@ -106,6 +119,8 @@ class HouseholdActor extends BaseEconActor {
                 theResponse = "OK"
               }
               else {
+                println("purchase = ${response.get()}")
+                Bank.cancelLock(theHold)
                 theResponse = "was unable to make purchase"
               }
             }
@@ -132,7 +147,7 @@ class HouseholdActor extends BaseEconActor {
 
     //make calls to all markets and get prices
     def prices = [:]
-    reg.getMarkets().each {
+    this.reg.getMarkets().each {
       // println("sending getPrice  to ${it.uuid}")
       def priceProm = it.sendAndPromise(new Message(Command.PRICE_ITEM, [product: product]));
       prices.put(it.uuid, priceProm)
@@ -153,6 +168,5 @@ class HouseholdActor extends BaseEconActor {
   def clear() {
     demands.clear()
     this.resources.clear()
-    this.money = 0
   }
 }

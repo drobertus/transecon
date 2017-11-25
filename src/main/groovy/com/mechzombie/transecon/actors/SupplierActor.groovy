@@ -2,6 +2,7 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.resources.Bank
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -10,8 +11,7 @@ class SupplierActor extends BaseEconActor{
   def product
   def inputs = [:]
   def resources = [:]
-  def employees = [:]
-  def money = 0
+  Map<UUID, Double> employees = [:]
 
   def productionGoalForTurn
   def toBePurchasedForProductionGoal
@@ -21,7 +21,10 @@ class SupplierActor extends BaseEconActor{
   SupplierActor(UUID id=UUID.randomUUID(), product, inputsPerUnit = [:], resources =[:], employees = [:]) {
     super(id)
     this.product = product
-    this.employees = employees
+    employees.each { k, v ->
+      employHousehold(UUID.fromString(k), v)
+    }
+    //this.employees = employees
     this.inputs = inputsPerUnit
     this.resources = resources
 
@@ -40,7 +43,7 @@ class SupplierActor extends BaseEconActor{
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {
-    this.employees.put(uuid.toString(), monthlyWage)
+    this.employees.put(uuid, monthlyWage)
   }
 
   @Override
@@ -53,7 +56,7 @@ class SupplierActor extends BaseEconActor{
         perUnitInputs this.inputs
         resources this.resources
         employees this.employees
-        money this.money
+        money Bank.getAccountValue(this.uuid) //this.money
         //transactions this.transactions
       }
     }
@@ -78,18 +81,19 @@ class SupplierActor extends BaseEconActor{
 
             //TODO: move payment calc to CALC_NEEDS
             employees.each { k, v ->
-              println("-----key = ${k}, amount= ${v}")
-              if (money > v) {
-                println("sending money!")
-                payroll.put(k, sendMoney(UUID.fromString(k), v, 'payroll'))
-                money -= v
-              }else {
-                println("Payroll for ${k} of ${v} unable to be met by supplier")
-              }
+              println("-----key = ${k}, amount= ${v}, ${k.class}")
+              //if (money > v) {
+              println("sending money!")
+              payroll.put(k, Bank.transferFunds(this.privateUUID, k, v))
+               // payroll.put(k, sendMoney(UUID.fromString(k), v, 'payroll'))
+               // money -= v
+              //}else {
+              //  println("Payroll for ${k} of ${v} unable to be met by supplier")
+             // }
             }
 
             payroll.values().each {
-              println("got payroll response --" && it.get())
+              println("got payroll response --" && it)
             }
             theResponse = 'OK'
             this.completeStep(Command.RUN_PAYROLL)
@@ -119,8 +123,10 @@ class SupplierActor extends BaseEconActor{
               if (k == 'labor') {
                 onHand = laborAvailableAtTurn
               }
-              def ratio  = (onHand / v)
-
+              def ratio = 0.0
+              if(onHand) {
+                ratio = (onHand / v)
+              }
               limitingRatios.put(k, ratio)
             }
 
@@ -131,11 +137,13 @@ class SupplierActor extends BaseEconActor{
             //now get all the ones with the first value.
             //if 0 then...?
             // TODO: need a turn production target! Count of units expected to be produced in this turn
-            //map of needed type of products and valoume that need to be purchased
+            //map of needed type of products and volume that need to be purchased
             // will be empty is all on hand
-            this.toBePurchasedForProductionGoal = [:]
 
-            this.productionGoalForTurn = 1
+
+            this.toBePurchasedForProductionGoal.put('labor', limitingRatios.get('labor'))
+
+            this.productionGoalForTurn = sorted.values().toArray()[0]
 
 
             // look at resources
@@ -157,7 +165,16 @@ class SupplierActor extends BaseEconActor{
             break
 
           case Command.PURCHASE_SUPPLIES:
+            this.toBePurchasedForProductionGoal.each{
+              //purchase everything but labor
+              if(it.key != 'labor') {
+                // get prices from markets
+                // make purchase
+                // do all this in blocking form
+                // TODO: if purchases can not be made then adjust production goals?
 
+              }
+            }
             //given what is needed to fill the gap to produce, make outlays to fill in the gaps
 
             this.completeStep(Command.PURCHASE_SUPPLIES)
@@ -214,7 +231,6 @@ class SupplierActor extends BaseEconActor{
   def clear() {
     this.employees.clear()
     this.resources.clear()
-    this.money = 0
   }
 
 }

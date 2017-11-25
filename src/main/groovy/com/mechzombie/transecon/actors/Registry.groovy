@@ -2,9 +2,13 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.gpars.group.DefaultPGroup
+
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
 import static groovyx.gpars.GParsPool.withPool
 
@@ -13,7 +17,8 @@ import static groovyx.gpars.GParsPool.withPool
 class Registry {
 
   def pGroup = new DefaultPGroup(Runtime.getRuntime().availableProcessors())
-  Map<UUID, BaseEconActor> actors = [:]
+  ConcurrentHashMap<UUID, BaseEconActor> actors = [:]
+
   def markets = []
   def suppliers = []
   def households = []
@@ -29,12 +34,18 @@ class Registry {
     if (!actor.isActive()) {
       actor.start()
     }else {
-      println ("actor ${actor.uuid} was already active")
+      log.info ("actor ${actor.uuid} was already active")
     }
   }
 
   def messageActor(uuid, message){
-    return actors.get(uuid).sendAndPromise(message)
+    log.info("sending message to actor ${uuid}, msg ${message.type}")
+   // try {
+      return actors.get(uuid).sendAndPromise(message)
+//    }catch(ex) {
+//      log.info("error sending message to actor ${uuid}, msg ${message.type}")
+//      throw new IllegalStateException(ex)
+//    }
   }
 
   MarketActor[] getMarkets() {
@@ -45,15 +56,21 @@ class Registry {
    * A blocking call- will block until all actors complete a turn
    */
   def runTurn() {
-    def turnStatus = []
+    ConcurrentLinkedQueue turnStatus = []
     turnNumber ++
     Message turnMsg = new Message(Command.TAKE_TURN, [turnNum: turnNumber])
     //TODO: this needs to be non-blocking
     withPool(Runtime.runtime.availableProcessors(), {
-      actors.eachParallel() { k, v ->
-        log.info "adding ${k}"
-        turnStatus << messageActor(k, turnMsg)
-      }
+  //    try {
+        actors.eachParallel() { k, v ->
+          log.info "adding ${k} of type ${v.class}"
+          turnStatus << messageActor(k, turnMsg)
+        }
+//      }catch(IllegalStateException ise) {
+//
+//        log.info("illegal state " + ise.toString())
+//        throw new Exception(ise)
+//      }
     })
 
 
@@ -95,17 +112,22 @@ class Registry {
     markets = []
     suppliers = []
     households = []
+
    // actors = [:]
     //pGroup.shutdown()
-    actors.values().each {
+    actors.each { k,v ->
       try {
-        it.clear()
-        it.stop()
+        v.clear()
+        v.stop()
+        actors.remove(k)
       }catch(Exception e) {
         e.printStackTrace()
       }
-      actors.remove(it)
+
+
     }
+    println("cleanup size = ${actors.size()}")
+    Bank.clear()
 
   }
 }

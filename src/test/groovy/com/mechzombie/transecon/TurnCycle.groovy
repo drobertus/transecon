@@ -6,6 +6,7 @@ import com.mechzombie.transecon.actors.Registry
 import com.mechzombie.transecon.actors.SupplierActor
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.resources.Bank
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -34,7 +35,7 @@ class TurnCycle extends BaseActorTest {
     household = new HouseholdActor(UUID.randomUUID(), hhDemand, hhResources)
     supplier = new SupplierActor(UUID.randomUUID(), product, inputsPerUnit, [iron: 10, corn: 50], ["${household.uuid.toString()}": salary])
 
-    supplier.setMoney(500)
+    Bank.deposit(supplier.uuid, 500)
   }
 
   def "run a turn"() {
@@ -66,7 +67,9 @@ class TurnCycle extends BaseActorTest {
     supStat == 'complete'
     hhStat == 'complete'
     assert household.turnNeeds == [housing:3, food: 1]
+    assert supplier.toBePurchasedForProductionGoal == [labor: 1]
     assert supplier.productionGoalForTurn == 1
+
 
   }
 

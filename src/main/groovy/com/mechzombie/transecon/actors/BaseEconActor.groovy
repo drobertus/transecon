@@ -2,6 +2,7 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
@@ -16,10 +17,12 @@ abstract class BaseEconActor extends DefaultActor {
   def reg = Registry.instance
 
   UUID uuid
+  UUID privateUUID
   def transactions = []
 
   BaseEconActor(UUID id = UUID.randomUUID()) {
     this.uuid = id
+    privateUUID = Bank.createAccount(uuid)
     reg.addActor(this)
   }
 
@@ -90,6 +93,11 @@ abstract class BaseEconActor extends DefaultActor {
   }
 
   protected def sendMoney(UUID recipient, amount, reason) {
-    return reg.messageActor(recipient, new Message(Command.SEND_MONEY, [from: this.uuid, amount: amount, reason:  reason]))
+   // return reg.messageActor(recipient, new Message(Command.SEND_MONEY, [from: this.uuid, amount: amount, reason:  reason]))
+    return Bank.deposit(recipient, amount)
+  }
+
+  def getBankBalance() {
+    return Bank.getAccountValue(this.uuid)
   }
 }

@@ -30,7 +30,7 @@ class HouseholdTest extends BaseActorTest {
     then:
     println response
     response.toString() == '[econactor:[type:class com.mechzombie.transecon.actors.HouseholdActor, id:' +
-      hh.uuid + ', requirements:[:], resources:[:], money:0]]'
+      hh.uuid + ', requirements:[:], resources:[:], money:0.0]]'
 
   }
 
