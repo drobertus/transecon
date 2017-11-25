@@ -4,6 +4,7 @@ import com.mechzombie.transecon.actors.HouseholdActor
 import com.mechzombie.transecon.actors.Registry
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import spock.lang.Shared
 import spock.lang.Specification
@@ -28,9 +29,8 @@ class HouseholdTest extends BaseActorTest {
     when:
     response = hh.sendAndWait(new Message(Command.STATUS))
     then:
-    println response
-    response.toString() == '[econactor:[type:class com.mechzombie.transecon.actors.HouseholdActor, id:' +
-      hh.uuid + ', requirements:[:], resources:[:], money:0.0]]'
+    println ("output=  ${response}")
+    response.toString() == "[household:[type:HouseholdActor, id:${hh.uuid}, requirements:[:], resources:[:], money:0.0]]"
 
   }
 

@@ -27,14 +27,14 @@ class MarketActor extends BaseEconActor {
 
   @Override
   def status() {
-    def status = builder.econactor {
-      type this.class
+    builder.econactor {
+      type this.class.simpleName
       id this.uuid
       inventory inventory
       money Bank.getAccountValue(this.uuid)
     }
-    log.debug "here: ${status.toString()}"
-    return status.toString()
+    log.debug "here: ${builder.toString()}"
+    return builder.content //.toString()
   }
 
   @Override

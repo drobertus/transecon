@@ -3,6 +3,7 @@ package com.mechzombie.transecon.actors
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
+import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -30,21 +31,15 @@ class HouseholdActor extends BaseEconActor {
   @Override
   def status() {
     def moneyAcct = Bank.getAccountValue(this.uuid)
-    println(moneyAcct)
-    def status
-    try {
-      status = builder.econactor {
-        type this.class
+    builder.household {
+        type this.class.simpleName
         id this.uuid
         requirements this.demands
         resources this.resources
         money moneyAcct
       }
-    }
-    catch(Exception e) {
-      log.error(e.toString())
-    }
-    return status
+
+    return builder.content
   }
 
   @Override
@@ -60,7 +55,6 @@ class HouseholdActor extends BaseEconActor {
             break
           case Command.STATUS:
             theResponse = status()
-            //println "status = ${theResponse}"
             break
           case Command.CALC_NEEDS:
             //loop through demands, compare to resources

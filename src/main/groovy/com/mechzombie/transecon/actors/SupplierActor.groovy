@@ -48,22 +48,17 @@ class SupplierActor extends BaseEconActor{
 
   @Override
   def status() {
-    def status
-    try {
-      status = builder.econactor {
-        type this.class
+    builder.econactor {
+        type this.class.simpleName
         id this.uuid
+        output product
         perUnitInputs this.inputs
         resources this.resources
         employees this.employees
-        money Bank.getAccountValue(this.uuid) //this.money
-        //transactions this.transactions
+        money Bank.getAccountValue(this.uuid)
       }
-    }
-    catch(Exception e) {
-      println "err ${e}"
-    }
-    return status.toString()
+
+    return builder.content //.toString()
   }
 
   @Override

@@ -1,6 +1,5 @@
 package com.mechzombie.transecon.actors
 
-import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder

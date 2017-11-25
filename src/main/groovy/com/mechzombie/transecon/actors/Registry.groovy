@@ -79,7 +79,7 @@ class Registry {
   }
 
   def getSystemState() {
-    def status
+    def status = new JsonBuilder()
     def marketStatus = []
     def hhStatus = []
     def suppStatus = []
@@ -95,16 +95,20 @@ class Registry {
     }
 
     try {
-      status = new JsonBuilder().system {
+      status.system {
         houseHolds hhStatus
         systemMarkets marketStatus
         theSuppliers suppStatus
+        turnData {
+          turnNumber this.turnNumber
+        }
       }
     }
     catch(Exception e) {
       println "err ${e}"
     }
     //println "here: ${status.toString()}"
+    //println status.toPrettyString()
     return status.toString()
   }
 
@@ -112,6 +116,7 @@ class Registry {
     markets = []
     suppliers = []
     households = []
+    this.turnNumber = 0
 
    // actors = [:]
     //pGroup.shutdown()
