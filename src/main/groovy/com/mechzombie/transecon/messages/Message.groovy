@@ -11,12 +11,10 @@ class Message {
     def valid = true
     if(!vals.size() == params.size()) {
       valid = false
-      println("expected ${params} but got ${vals}")
     }
 
     params.each {
       if (!vals.get(it)) {
-        println("missing ${it}")
         valid = false
       }
     }
@@ -25,7 +23,7 @@ class Message {
       this.type = type
       this.vals = vals
     }
-    else{
+    else {
       throw Exception("Message of type ${type} requires parameters ${type.params}")
     }
   }

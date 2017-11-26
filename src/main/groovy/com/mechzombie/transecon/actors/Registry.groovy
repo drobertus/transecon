@@ -66,19 +66,12 @@ class Registry {
           log.info "adding ${k} of type ${v.class}"
           turnStatus << messageActor(k, turnMsg)
         }
-//      }catch(IllegalStateException ise) {
-//
-//        log.info("illegal state " + ise.toString())
-//        throw new Exception(ise)
-//      }
     })
 
-
-    //block until turn completes
     return turnStatus
   }
 
-  def getSystemState() {
+  private def _sysState() {
     def status = new JsonBuilder()
     def marketStatus = []
     def hhStatus = []
@@ -94,22 +87,22 @@ class Registry {
       suppStatus << messageActor(it.uuid, new Message(Command.STATUS)).get()
     }
 
-    try {
-      status.system {
-        houseHolds hhStatus
-        systemMarkets marketStatus
-        theSuppliers suppStatus
-        turnData {
-          turnNumber this.turnNumber
-        }
+    status.system {
+      houseHolds hhStatus
+      systemMarkets marketStatus
+      theSuppliers suppStatus
+      turnData {
+        turnNumber this.turnNumber
       }
     }
-    catch(Exception e) {
-      println "err ${e}"
-    }
-    //println "here: ${status.toString()}"
-    //println status.toPrettyString()
-    return status.toString()
+
+    return status
+  }
+
+
+
+  def getSystemStateString() {
+    return _sysState().toString()
   }
 
   def cleanup() {
@@ -131,7 +124,7 @@ class Registry {
 
 
     }
-    println("cleanup size = ${actors.size()}")
+    //println("cleanup size = ${actors.size()}")
     Bank.clear()
 
   }

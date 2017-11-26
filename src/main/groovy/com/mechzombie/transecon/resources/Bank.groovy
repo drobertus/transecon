@@ -1,10 +1,12 @@
 package com.mechzombie.transecon.resources
 
+import groovy.util.logging.Slf4j
+
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.UnaryOperator
 
-
+@Slf4j
 class Bank {
 
   protected static HashMap<UUID, AtomicReference<Double>> account = new HashMap<UUID, AtomicReference<Double>>()
@@ -37,18 +39,18 @@ class Bank {
         Double apply(Double sourceAccountValue) {
           if (sourceAccountValue >= amount) {
             def madeDeposit = Bank.deposit(publicDeposit, amount)
-            println("made deposit side of transfer = ${madeDeposit}")
+            log.debug("made deposit side of transfer = ${madeDeposit}")
             if (madeDeposit) {
               sourceAccountValue = sourceAccountValue - amount
               response = true
             }
           }
-          println("returning val = ${sourceAccountValue}, responseval = ${response}")
+          log.debug("returning val = ${sourceAccountValue}, responseval = ${response}")
           return sourceAccountValue
         }
       })
     }
-    println("rsp ${response}")
+
     return response
   }
   /**
@@ -59,18 +61,14 @@ class Bank {
    */
   static boolean deposit(UUID uuid, Double amount) {
     AtomicReference<Double> val = account.get(uuid)
-
     if (val != null) {
-      println("val= ${val}")
       val.updateAndGet(new UnaryOperator<Double>() {
         @Override
         Double apply(Double aDouble) {
-          println ("adouble = ${aDouble}")
           aDouble = aDouble.doubleValue() + amount
-          println("modAmt = ${aDouble}")
           return aDouble
         }
-      }) // (value -> return (value + amount))
+      })
       return true
     }else {
       false

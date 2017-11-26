@@ -82,7 +82,7 @@ class MarketActor extends BaseEconActor {
                   //message the producer with the amount, keep the difference
                   def producer = prod[1]
                   def send = this.sendMoney(producer, (int)prod[0], 'sale')
-                  println("---- sendMoney ${send}")
+                  //println("---- sendMoney ${send}")
                   if(send) {
                     theResponse = "OK"
                     shelf.remove(i)

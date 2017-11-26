@@ -29,7 +29,7 @@ class HouseholdTest extends BaseActorTest {
     when:
     response = hh.sendAndWait(new Message(Command.STATUS))
     then:
-    println ("output=  ${response}")
+    //println ("output=  ${response}")
     response.toString() == "[household:[type:HouseholdActor, id:${hh.uuid}, requirements:[:], resources:[:], money:0.0]]"
 
   }

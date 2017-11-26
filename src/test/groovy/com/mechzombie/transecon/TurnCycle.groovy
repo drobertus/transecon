@@ -45,10 +45,9 @@ class TurnCycle extends BaseActorTest {
     def endState = reg.runTurn()
 
     then:
-   // println "endState= ${endState}"
     endState.each() {
       assert it.get() != null
-      println("result = ${it.get()}")
+      //println("result = ${it.get()}")
 
     }
     when:
@@ -57,7 +56,7 @@ class TurnCycle extends BaseActorTest {
     def hhStat = household.turnStatus()
 
     while(!(supStat.equals('complete')) || !(hhStat.equals('complete'))) {
-      println("------  waiting ${counter+ 20}ms to complete ${supStat} ${hhStat}") // ${supplier.turnStatus()}")
+      //println("------  waiting ${counter+ 20}ms to complete ${supStat} ${hhStat}") // ${supplier.turnStatus()}")
       sleep(20)
       supStat = supplier.turnStatus()
       hhStat = household.turnStatus()

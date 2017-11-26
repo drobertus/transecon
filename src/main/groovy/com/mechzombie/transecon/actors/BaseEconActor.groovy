@@ -81,18 +81,7 @@ abstract class BaseEconActor extends DefaultActor {
   }
   abstract def status()
 
-  @Override
-  protected void act() {
-    loop {
-      react {
-        println "it is $it"
-        reply "no override"
-      }
-    }
-  }
-
-  protected def sendMoney(UUID recipient, amount, reason) {
-   // return reg.messageActor(recipient, new Message(Command.SEND_MONEY, [from: this.uuid, amount: amount, reason:  reason]))
+  protected def sendMoney(UUID recipient, amount, reason = null) {
     return Bank.deposit(recipient, amount)
   }
 

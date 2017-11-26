@@ -2,14 +2,6 @@ package com.mechzombie.transecon.messages
 
 enum Command {
 
-  /*
-  BID('bid', ['bidder', 'amount']),
-  CREATE_MARKET('market', ['product', 'end_time', 'price']),
-  STATUS('status'),
-  TRANSACTION('transaction', ['amount', 'type']),
-  END_MARKET('end_market'),
-  */
-  //create market - suppler, product, end time, price (nullable?)
   TAKE_TURN('take_turn', ['turnNum']),
   STOCK_ITEM('stock_item', ['producer', 'product', 'price']), //[UUID, String, int]), //producer, product, price
   PRICE_ITEM('price_item', ['product']), //item to price

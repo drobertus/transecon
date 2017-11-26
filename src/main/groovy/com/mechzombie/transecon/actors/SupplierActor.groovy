@@ -76,32 +76,23 @@ class SupplierActor extends BaseEconActor{
 
             //TODO: move payment calc to CALC_NEEDS
             employees.each { k, v ->
-              println("-----key = ${k}, amount= ${v}, ${k.class}")
-              //if (money > v) {
-              println("sending money!")
               payroll.put(k, Bank.transferFunds(this.privateUUID, k, v))
-               // payroll.put(k, sendMoney(UUID.fromString(k), v, 'payroll'))
-               // money -= v
-              //}else {
-              //  println("Payroll for ${k} of ${v} unable to be met by supplier")
-             // }
             }
-
+            def allSent = true
             payroll.values().each {
-              println("got payroll response --" && it)
             }
             theResponse = 'OK'
             this.completeStep(Command.RUN_PAYROLL)
             break
-          case Command.SEND_MONEY:
-            def from = it.vals.from
-            def amount = it.vals.amount
-            money += amount
-            def reason = it.vals.reason
-
-
-            theResponse = "OK"
-            break
+//          case Command.SEND_MONEY:
+//            def from = it.vals.from
+//            def amount = it.vals.amount
+//            money += amount
+//            def reason = it.vals.reason
+//
+//
+//            theResponse = "OK"
+//            break
           case Command.CALC_NEEDS:
 
             def salaries = 0
@@ -124,22 +115,15 @@ class SupplierActor extends BaseEconActor{
               }
               limitingRatios.put(k, ratio)
             }
-
-            println("ratios unsorted ${limitingRatios}")
             def sorted = limitingRatios.sort { it.value }
-            println("ratios sorted ${sorted}")
 
             //now get all the ones with the first value.
             //if 0 then...?
             // TODO: need a turn production target! Count of units expected to be produced in this turn
             //map of needed type of products and volume that need to be purchased
             // will be empty is all on hand
-
-
             this.toBePurchasedForProductionGoal.put('labor', limitingRatios.get('labor'))
-
             this.productionGoalForTurn = sorted.values().toArray()[0]
-
 
             // look at resources
             // look at labor
@@ -203,7 +187,6 @@ class SupplierActor extends BaseEconActor{
 
             // reset turn parameters
             this.toBePurchasedForProductionGoal = [:]
-
             this.productionGoalForTurn = 1
             theResponse = runTurn()
 

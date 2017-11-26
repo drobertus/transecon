@@ -93,17 +93,9 @@ class HouseholdActor extends BaseEconActor {
             def market = it.vals.market
 
             def theHold = Bank.holdDebitAmount(this.uuid, price)
-            println("theHold = ${theHold}")
             if(theHold != null ) {
-
-            //if (price <= this.money) {
               def response = purchaseItem(prod, price, market)
-
               if (response.get() == 'OK') {
-
-
-                println("completeDebit= ${Bank.completeDebit(theHold)}")
-              //  money -= price
                 def prodCount = resources.get(prod)
                 if(!prodCount) {
                   prodCount = 0
@@ -113,7 +105,6 @@ class HouseholdActor extends BaseEconActor {
                 theResponse = "OK"
               }
               else {
-                println("purchase = ${response.get()}")
                 Bank.cancelLock(theHold)
                 theResponse = "was unable to make purchase"
               }
@@ -142,13 +133,11 @@ class HouseholdActor extends BaseEconActor {
     //make calls to all markets and get prices
     def prices = [:]
     this.reg.getMarkets().each {
-      // println("sending getPrice  to ${it.uuid}")
       def priceProm = it.sendAndPromise(new Message(Command.PRICE_ITEM, [product: product]));
       prices.put(it.uuid, priceProm)
     }
     prices.each { k, v ->
       def aPrice = v.get()
-      // println("price found of ${aPrice}")
       prices.put(k, aPrice)
     }
     return prices

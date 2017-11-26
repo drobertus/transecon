@@ -35,7 +35,7 @@ class SystemStatus extends BaseActorTest {
 
   def "get Complete System State"() {
     when:
-    def sysState = reg.getSystemState()
+    def sysState = reg.getSystemStateString()
     def expected = new JsonBuilder()
     expected.system {
       houseHolds ([
