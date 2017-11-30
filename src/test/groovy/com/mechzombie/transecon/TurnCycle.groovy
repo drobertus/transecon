@@ -41,34 +41,39 @@ class TurnCycle extends BaseActorTest {
   def "run a turn"() {
     // this may be a challenge as some operations may be blocking and other not
 
+    assert market.inventory.get(product) == null
     when:
     def endState = reg.runTurn()
 
     then:
     endState.each() {
       assert it.get() != null
-      //println("result = ${it.get()}")
-
     }
+
     when:
     def counter = 0
     def supStat = supplier.turnStatus()
     def hhStat = household.turnStatus()
 
     while(!(supStat.equals('complete')) || !(hhStat.equals('complete'))) {
-      //println("------  waiting ${counter+ 20}ms to complete ${supStat} ${hhStat}") // ${supplier.turnStatus()}")
+      println("------  waiting ${counter+ 20}ms to complete ${supStat} ${hhStat}") // ${supplier.turnStatus()}")
       sleep(20)
       supStat = supplier.turnStatus()
       hhStat = household.turnStatus()
 
     }
     then:
-    supStat == 'complete'
-    hhStat == 'complete'
+    assert supStat == 'complete'
+    assert hhStat == 'complete'
     assert household.turnNeeds == [housing:3, food: 1]
     assert supplier.toBePurchasedForProductionGoal == [labor: 1]
     assert supplier.productionGoalForTurn == 1
 
+    //NOTE: when this passes we are seeing production
+    assert supplier.getBankBalance() == 450.0
+    assert supplier.resources.get('iron') == 9.9
+    assert supplier.resources.get('corn') == 49
+    assert market.inventory.get(product).getAvailableCount() == 1
 
   }
 

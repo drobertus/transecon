@@ -46,12 +46,13 @@ abstract class BaseEconActor extends DefaultActor {
   def turnStatus(){
     def status = 'complete'
     if (currentTurnStatus.size() == stepList.size()){
-      currentTurnStatus.each {k,v ->
-        if (v != 'complete'){
-          status = 'incomplete';
+      for(def obj : currentTurnStatus) { //.each {k,v ->
+        if (obj.value != 'complete'){
+          status = 'incomplete'
+          break
         }
       }
-
+      log.info("returning status of ${status} for ${this.uuid}")
       return status
     }
     return 'incomplete - mismatch'

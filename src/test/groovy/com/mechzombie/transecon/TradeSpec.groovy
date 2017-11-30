@@ -34,12 +34,11 @@ class TradeSpec extends BaseActorTest {
 
   def tradeTest () {
     when: //the producer ships to a market
-    def prom = supplier.shipItem(market, product, producerPrice)
+    def prom = supplier.shipItem(market, product, producerPrice, 4)
 
     then: //the market should have 1 item
-    prom.get()  == 1
-    market.inventory.get(product) != null
-    market.inventory.get(product).size() == 1
+    prom.get()  == 4
+    market.inventory.get(product).getAvailableCount() == 4
     Bank.getAccountValue( household.uuid) == 0
     when: //the household inspects all markets for that product
     def prices = household.getPrices(product)

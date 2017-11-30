@@ -3,7 +3,7 @@ package com.mechzombie.transecon.messages
 enum Command {
 
   TAKE_TURN('take_turn', ['turnNum']),
-  STOCK_ITEM('stock_item', ['producer', 'product', 'price']), //[UUID, String, int]), //producer, product, price
+  STOCK_ITEM('stock_item', ['producer', 'product', 'price', 'quantity']), //[UUID, String, int]), //producer, product, price
   PRICE_ITEM('price_item', ['product']), //item to price
   PURCHASE_ITEM('purchase_item', ['market', 'product', 'price']), //purchaser, product, price
   FULFILL_ORDER('fulfill_order', ['buyer', 'product', 'price']),

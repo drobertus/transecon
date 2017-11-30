@@ -102,6 +102,7 @@ class HouseholdActor extends BaseEconActor {
                 }
                 prodCount++
                 resources.put(prod, prodCount)
+                Bank.completeDebit(theHold)
                 theResponse = "OK"
               }
               else {

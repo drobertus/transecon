@@ -8,21 +8,23 @@ import groovy.util.logging.Slf4j
 @Slf4j
 class MarketActor extends BaseEconActor {
 
-  def inventory = [:] //products, grouped  by type, ordered  by price.  buy the cheap one first (for now)
-
+  Map<String, Shelf> inventory = [:] //products, grouped  by type, ordered  by price.  buy the cheap one first (for now)
   MarketActor(UUID id = UUID.randomUUID()) {
     super(id)
     log.info("Created Market ${id}")
   }
 
-  private def addProduct(supplier, product, price) {
-    def shelf = inventory.get(product)
+  private def shelveProduct(UUID supplier, String prodName, Double price, Integer quantity) {
+
+    Shelf shelf = inventory.get(prodName)
     if(!shelf) {
-      shelf = []
-      inventory.put(product, shelf)
+      println("creating new shelf for ${prodName}")
+
+      shelf = new Shelf(prodName)
+      inventory.put(prodName, shelf)
     }
-    shelf << [price, supplier]
-    return shelf.size()
+
+    return shelf.addToShelf(supplier, quantity, price)
   }
 
   @Override
@@ -37,6 +39,7 @@ class MarketActor extends BaseEconActor {
     return builder.content //.toString()
   }
 
+
   @Override
   protected void act() {
     loop {
@@ -50,14 +53,13 @@ class MarketActor extends BaseEconActor {
             def supplier = params.producer
             def product = params.product
             def price = params.price
+            def quantity = params.quantity
 
-//            def shelf = inventory.get(product)
-//            if(!shelf) {
-//              shelf = []
-//              inventory.put(product, shelf)
-//            }
-//            shelf << [price, supplier]
-            theResponse = addProduct(supplier, product, price) // shelf.size()  //respond to the suplier with the number of items in invtentory
+//            Shelf shelf = inventory.get(product)
+
+            //addToShelf
+
+            theResponse = shelveProduct(supplier, product, price, quantity) // shelf.size()  //respond to the suplier with the number of items in invtentory
             break
 
           case Command.FULFILL_ORDER:
@@ -66,11 +68,19 @@ class MarketActor extends BaseEconActor {
             def buyer = params.buyer
             def product = params.product
             def price = params.price
+            //TODO: add count to purchase
+            def count = params.count ? params.count : 1
+
             def shelf = inventory.get(product)
             //println ("the shelf = ${shelf}")
             if(shelf) {
+
+              int bought = shelf.buyAtPrice(price, count)
+
+              println("bought= ${bought}")
+
               //now compare prices
-              for(int i=0; i < shelf.size(); i ++) {
+              for(int i=0; i < shelf; i ++) {
                 def prod = shelf.getAt(i)
               //  println("item on shelf= ${prod}")
                 if (prod[0] <= price) {
@@ -108,19 +118,19 @@ class MarketActor extends BaseEconActor {
           case Command.PRICE_ITEM:
             def product = it.vals.product
             def shelf = this.inventory.get(product)
-            def bestPrice
+            def bestPrice = shelf.getBestPrice()
           //  println("found shelf ${shelf} for product ${product}")
-            if(shelf) {
-
-              shelf.each {
-                def aPrice = it[0]
-                if(!bestPrice || aPrice < bestPrice) {
-                  bestPrice = aPrice
-                }
-              }
+//            if(shelf) {
+//
+//              shelf.each {
+//                def aPrice = it[0]
+//                if(!bestPrice || aPrice < bestPrice) {
+//                  bestPrice = aPrice
+//                }
+//              }
               // find the best price available
               theResponse = bestPrice
-            }
+      //      }
 
             break
           case Command.STATUS:
@@ -140,5 +150,103 @@ class MarketActor extends BaseEconActor {
   @Override
   def clear() {
     inventory.clear()
+  }
+
+  private class Shelf {
+
+    def product
+
+    Map<UUID, Map<Double, Integer>> suppliers = [:]
+    Map<Double, Map<UUID, Integer>> byPrice = [:]
+
+    Shelf(product){
+      this.product = product
+    }
+
+    /**
+     * get up to the count at the set price (average price or total?)
+     * @param price - per unit price to buy at
+     * @param count - number of units to buy
+     */
+    def buyAtPrice(price, count) {
+      def totalFunds = price * count
+
+      byPrice.sort{ key, val-> key}
+      println ("sorted by price = ${byPrice}")
+      def toBuy = count
+      for(def obj : byPrice) {
+
+        def unitPrice = obj.key
+        if(unitPrice < price) {
+          def units = obj.value
+          for(def supplier : units) {
+            if (supplier.value > 0 && toBuy >  0) {
+              if(toBuy >= supplier.value)
+              def bought = supplier.value
+              units.remove(supplier)
+              toBuy = toBuy - bought
+            }
+          }
+        }
+        //stop conditions - out of need or increasing unit price exceeds available funds
+        if(toBuy == count) {
+          break
+        }
+      }
+      //return the number bought
+      return count - toBuy
+    }
+
+    def addToShelf(UUID supplier, int quantity, double price) {
+    //  println("adding ${quantity} at ${price} from ${supplier}")
+      def source = suppliers.get(supplier)
+      if(!source) {
+        source = [:]
+        suppliers.put(supplier, source)
+      //  println("created source for ${supplier}")
+      }
+      def priced = source.get(price)
+     // println("priced = ${priced}")
+      if (!priced) {
+        source.put(price, quantity)
+      } else {
+        source.put(price, priced + quantity)
+      }
+
+      //now update teh other map
+      def atPrice = byPrice.get(price)
+      if (!atPrice) {
+        atPrice = [:]
+        byPrice.put(price, atPrice)
+      }
+      def bySupplier = atPrice.get(supplier)
+      if(!bySupplier) {
+        atPrice.put(supplier, quantity)
+      } else {
+        atPrice.put(supplier, bySupplier + quantity)
+      }
+
+      return quantity
+    }
+
+    def getBestPrice() {
+      def bestPrice
+      this.byPrice.each { key, value ->
+        if(bestPrice == null || bestPrice > key) {
+          bestPrice = key
+        }
+      }
+      return bestPrice
+    }
+
+    def getAvailableCount(){
+      Integer total = 0
+      suppliers.each { k, value ->
+        value.values().toArray().every {
+          total = total + it
+        }
+      }
+      return total
+    }
   }
 }

@@ -9,11 +9,12 @@ import groovy.util.logging.Slf4j
 class SupplierActor extends BaseEconActor{
 
   def product
+  def perUnitPrice = 20
   def inputs = [:]
   def resources = [:]
   Map<UUID, Double> employees = [:]
 
-  def productionGoalForTurn
+  Integer productionGoalForTurn
   def toBePurchasedForProductionGoal
 
   def sales
@@ -153,6 +154,7 @@ class SupplierActor extends BaseEconActor{
                 // TODO: if purchases can not be made then adjust production goals?
 
               }
+
             }
             //given what is needed to fill the gap to produce, make outlays to fill in the gaps
 
@@ -162,6 +164,21 @@ class SupplierActor extends BaseEconActor{
 
             //create new things, remove avilable resources that are converted, including labor
             //(fixed things as well as time-sensitive things RE: labor)
+            def consumed = [:]
+            inputs.each { product, amount ->
+              println("getting ${product}, amount needed per: ${amount}")
+
+              def amountUsed = amount * this.productionGoalForTurn
+              def onHand = resources.get(product)
+              println("onHand = ${onHand}")
+              if(product == 'labor' && onHand == null) {
+                onHand = amountUsed
+              }
+              consumed.put(product, amountUsed)
+              resources.put(product, onHand - amountUsed)
+            }
+
+            resources.put(this.product, this.productionGoalForTurn)
 
             this.completeStep(Command.PRODUCE_ITEMS)
             break
@@ -173,7 +190,16 @@ class SupplierActor extends BaseEconActor{
             this.completeStep(Command.FINANCE_TURN)
             break
           case Command.SHIP_ITEMS:
-            this.completeStep(Command.SHIP_ITEMS)
+
+            //TODO: find a way to optomise which markets to ship to
+
+            def shipment = reg.messageActor(reg.markets[0].uuid, new Message(Command.STOCK_ITEM,
+                [producer: this.uuid, product: this.product, price: this.perUnitPrice, quantity: productionGoalForTurn]))
+            println ("shipment==== ${shipment.get()}")
+            if(shipment.get() == this.productionGoalForTurn) {
+              this.completeStep(Command.SHIP_ITEMS)
+            }
+            theResponse = 'SHIPPED'
             break
           case Command.TAKE_TURN:
 
@@ -201,8 +227,8 @@ class SupplierActor extends BaseEconActor{
     }
   }
 
-  def shipItem(MarketActor destination, String product, int price) {
-    destination.sendAndPromise(new Message(Command.STOCK_ITEM, [producer: this.uuid, product: product, price: price]) )
+  def shipItem(MarketActor destination, String product, double price, int quantity = 1) {
+    destination.sendAndPromise(new Message(Command.STOCK_ITEM, [producer: this.uuid, product: product, price: price, quantity: quantity]) )
   }
 
   @Override
