@@ -71,6 +71,8 @@ class TradeSpec extends BaseActorTest {
     then: //the purchase should succeed
     assert purchase.get() == "OK"
     assert household.resources.get(product) == 1
+    assert market.inventory.get(product).getAvailableCount() == 3
+    assert household.getBankBalance() == salary - this.consumerEvenPrice
 
   }
 }
