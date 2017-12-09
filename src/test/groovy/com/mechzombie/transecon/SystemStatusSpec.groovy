@@ -4,13 +4,15 @@ import com.mechzombie.transecon.actors.HouseholdActor
 import com.mechzombie.transecon.actors.MarketActor
 import com.mechzombie.transecon.actors.Registry
 import com.mechzombie.transecon.actors.SupplierActor
+import com.mechzombie.transecon.messages.Command
+import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import spock.lang.Shared
 import spock.lang.Specification
 
-class SystemStatus extends BaseActorTest {
+class SystemStatusSpec extends BaseActorTest {
 
   def product = 'beanbags'
   def producerPrice = 5
@@ -30,7 +32,7 @@ class SystemStatus extends BaseActorTest {
     Bank.deposit(household.uuid, 35)
     household.getResources().put('food', 8)
     household.getResources().put('housing', 3)
-    market.addProduct(supplier.uuid, product, producerPrice)
+    market.sendAndWait(new Message(Command.STOCK_ITEM, [producer: supplier.uuid, product: product, price: producerPrice, quantity: 3])) //.addProduct(supplier.uuid, product, producerPrice)
   }
 
   def "get Complete System State"() {
@@ -58,11 +60,10 @@ class SystemStatus extends BaseActorTest {
             econactor {
               type 'MarketActor'
               id market.uuid
-              inventory {
-                beanbags ([
-                    [5, supplier.uuid]
-                ])
-              }
+              inventory ([{
+                  product product
+                  count 3
+                }])
               money 0.0
             }
           }
