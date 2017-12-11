@@ -31,7 +31,6 @@ class TurnCycle extends BaseActorTest {
 
   def setup() {
     market = new MarketActor(UUID.randomUUID())
-
     household = new HouseholdActor(UUID.randomUUID(), hhDemand, hhResources)
     supplier = new SupplierActor(UUID.randomUUID(), product, inputsPerUnit, [iron: 10, corn: 50], ["${household.uuid.toString()}": salary])
 
@@ -42,6 +41,8 @@ class TurnCycle extends BaseActorTest {
     // this may be a challenge as some operations may be blocking and other not
 
     assert market.inventory.get(product) == null
+
+    assert household.getResources() == [food: 1]
     when:
     def endState = reg.runTurn()
 
@@ -74,6 +75,8 @@ class TurnCycle extends BaseActorTest {
     assert supplier.resources.get('iron') == 9.9
     assert supplier.resources.get('corn') == 49
     assert market.inventory.get(product).getAvailableCount() == 1
+    assert household.getResources() == [food: 1]
+    assert household.getBankBalance() == salary - consumerEvenPrice
 
   }
 

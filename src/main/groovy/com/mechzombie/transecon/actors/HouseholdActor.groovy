@@ -69,6 +69,23 @@ class HouseholdActor extends BaseEconActor {
             this.completeStep(Command.FINANCE_TURN)
             break
           case Command.PURCHASE_SUPPLIES:
+            //TODO:  we need to buy what the household needs
+            log.info("need to purchase ${turnNeeds}")
+            def available = getBankBalance()
+            // get prices of products from markets
+            turnNeeds.forEach { prod, count ->
+
+              Map<UUID, Double> prices = getPrices(prod)
+              //TODO: make purchase
+
+              this.purchaseItem(prod, prices.value[0], prices.keySet()[0], count)
+
+            }
+
+
+            //get optimal prices per prodcut
+
+            //make purchases
 
             this.completeStep(Command.PURCHASE_SUPPLIES)
             break
@@ -88,13 +105,17 @@ class HouseholdActor extends BaseEconActor {
             theResponse = "OK"
             break
           case Command.PURCHASE_ITEM:
+
+
+            //TODO: encapsulate this business logic
             def prod = it.vals.product
             def price = it.vals.price
             def market = it.vals.market
-
+            log.info("purchasing ${it.vals}")
             def theHold = Bank.holdDebitAmount(this.uuid, price)
-            if(theHold != null ) {
+            if(theHold.amount == price ) {
               def response = purchaseItem(prod, price, market)
+              log.info("purchase response => ${response}")
               if (response.get() == 'OK') {
                 def prodCount = resources.get(prod)
                 if(!prodCount) {
@@ -102,6 +123,8 @@ class HouseholdActor extends BaseEconActor {
                 }
                 prodCount++
                 resources.put(prod, prodCount)
+                log.info("purchased- spent ${price}" )
+
                 Bank.completeDebit(theHold)
                 theResponse = "OK"
               }
@@ -129,7 +152,7 @@ class HouseholdActor extends BaseEconActor {
     }
   }
 
-  def getPrices(product) {
+  Map<UUID, Double> getPrices(product) {
 
     //make calls to all markets and get prices
     def prices = [:]
@@ -144,8 +167,8 @@ class HouseholdActor extends BaseEconActor {
     return prices
   }
 
-  private def purchaseItem(product, price, market){
-    return reg.messageActor(market, new Message(Command.FULFILL_ORDER, [buyer: this.uuid, product: product, price: price]))
+  private def purchaseItem(product, price, market, count){
+    return reg.messageActor(market, new Message(Command.FULFILL_ORDER, [buyer: this.uuid, product: product, price: price, count: count]))
   }
 
   @Override

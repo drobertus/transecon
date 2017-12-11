@@ -84,4 +84,42 @@ class BankSpec extends Specification {
     assert Bank.account.get(user1).get() == 0.5d
   }
 
+  def "test for the locks on accounts" () {
+    def startAmt = 100.0
+    def acct = UUID.randomUUID()
+    def privateId = Bank.createAccount(acct)
+    when:
+    def dep = Bank.deposit(acct, startAmt)
+
+    then:
+    assert dep
+
+    when: 'try to lock on more than allowed'
+    def lock = Bank.holdDebitAmount(acct, 200.0)
+
+    then: ' get an error message back'
+    lock.msg == 'NSF'
+    lock.amount == 0.0
+    lock.accountSource == acct
+    Bank.getAccountValue(acct) == startAmt
+
+    when: 'ask for a lock for a legal amount'
+    lock = Bank.holdDebitAmount(acct, 29.0)
+
+    then:
+    lock.msg == null
+    lock.amount == 29.0
+    lock.accountSource == acct
+    Bank.getAccountValue(acct) == startAmt - 29.0
+
+    when: 'we complete the transaction'
+    def completed = Bank.completeDebit(lock.uuid)
+
+    then:
+    assert completed
+    Bank.getAccountValue(acct) == startAmt - 29.0
+    Bank.locks.size() == 0
+
+  }
+
 }

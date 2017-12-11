@@ -12,7 +12,7 @@ class Bank {
   protected static HashMap<UUID, AtomicReference<Double>> account = new HashMap<UUID, AtomicReference<Double>>()
   protected static Map<UUID, UUID> privateLookup = new HashMap<UUID, UUID>()
 
-  protected static ConcurrentHashMap<UUID, Object> locks = new ConcurrentHashMap<UUID, Object>()
+  protected static ConcurrentHashMap<UUID, AccountLock> locks = new ConcurrentHashMap<UUID, AccountLock>()
 
   static Double getAccountValue(UUID uuid){
     return account.get(uuid).get()
@@ -75,18 +75,21 @@ class Bank {
     }
   }
 
-  static UUID holdDebitAmount(UUID accountToLock, Double amountTolock) {
+  static AccountLock holdDebitAmount(UUID accountToLock, Double amountTolock) {
 
-    def theLock = null
+    def theLock = new AccountLock(accountToLock)
     AtomicReference<Double> val = account.get(accountToLock)
     if (val != null) {
       val.getAndUpdate(new UnaryOperator<Double>() {
         @Override
         Double apply(Double accountVal) {
           if (accountVal >= amountTolock) {
+            theLock.amount = amountTolock
             accountVal = accountVal - amountTolock
-            theLock = UUID.randomUUID()
-            locks.put(theLock, [account: accountToLock, amount: amountTolock])
+            log.info("adding lock ${theLock.uuid}")
+            locks.put(theLock.uuid, theLock)
+          } else {
+            theLock.msg = 'NSF'
           }
           return accountVal
         }
@@ -97,21 +100,31 @@ class Bank {
 
   }
 
+  static boolean completeDebit(AccountLock lock) {
+    return completeDebit(lock.uuid)
+  }
+
   static boolean completeDebit(UUID lockId){
+
     def theTrans = locks.get(lockId)
     if(theTrans) {
-      locks.remove(theTrans)
+      log.info("killing lock ${lockId}")
+      locks.remove(lockId)
       return true
     }
     return false
   }
 
-  static boolean cancelLock(UUID lockId) {
-    def theTrans = locks.get(lockId)
-    if(theTrans) {
-      Bank.deposit(theTrans.account, theTrans.amount)
-      locks.remove(theTrans)
+  static boolean cancelLock(AccountLock lock) {
+    return cancelLock(lock.uuid)
+  }
 
+  static boolean cancelLock(UUID lockId) {
+    AccountLock theTrans = locks.get(lockId)
+    if(theTrans) {
+      Bank.deposit(theTrans.accountSource, theTrans.amount)
+      log.info("killing lock ${lockId}")
+      locks.remove(lockId)
       return true
     }
     return false
