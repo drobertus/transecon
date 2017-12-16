@@ -24,7 +24,7 @@ class TurnCycle extends BaseActorTest {
   @Shared SupplierActor supplier
   @Shared HouseholdActor household
 
-  Map hhDemand = [food: 2, housing: 3]
+  Map hhDemand = [food: 2] //, housing: 3]
   Map hhResources = [food:1]
 
   def inputsPerUnit = [iron: 0.1, corn: 1, labor: 1]
@@ -66,7 +66,8 @@ class TurnCycle extends BaseActorTest {
     then:
     assert supStat == 'complete'
     assert hhStat == 'complete'
-    assert household.turnNeeds == [housing:3, food: 1]
+    assert household.turnNeeds == [ food: 1 ] //housing:3,
+    assert household.getResources() == [food: 2]
     assert supplier.toBePurchasedForProductionGoal == [labor: 1]
     assert supplier.productionGoalForTurn == 1
 
@@ -75,7 +76,7 @@ class TurnCycle extends BaseActorTest {
     assert supplier.resources.get('iron') == 9.9
     assert supplier.resources.get('corn') == 49
     assert market.inventory.get(product).getAvailableCount() == 1
-    assert household.getResources() == [food: 1]
+    assert household.getResources() == [food: 2]
     assert household.getBankBalance() == salary - consumerEvenPrice
 
   }

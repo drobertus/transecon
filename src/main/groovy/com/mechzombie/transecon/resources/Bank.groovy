@@ -31,7 +31,9 @@ class Bank {
 
 
   static boolean transferFunds(UUID privateSource, UUID publicDeposit, Double amount) {
+
     UUID sourceAccount = privateLookup.get(privateSource)
+    log.info("transfering funds from ${privateSource}/${sourceAccount} to other in amt ${amount}")
     boolean response = false
     if(sourceAccount) {
       account.get(sourceAccount).updateAndGet(new UnaryOperator<Double>() {
@@ -50,7 +52,7 @@ class Bank {
         }
       })
     }
-
+    println( " response = ${response}")
     return response
   }
   /**

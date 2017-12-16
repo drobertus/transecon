@@ -40,7 +40,7 @@ class SupplierActor extends BaseEconActor{
         Command.SHIP_ITEMS]
                      //Command.STOCK_ITEM]
     resetTurnStatus()
-    log.info("Created Household ${id}")
+    log.info("Created Supplier ${id}")
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {

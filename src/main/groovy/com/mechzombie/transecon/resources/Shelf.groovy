@@ -1,11 +1,13 @@
 package com.mechzombie.transecon.resources
 
 import com.mechzombie.transecon.messages.Purchase
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
 @Slf4j
 class Shelf {
-  def product
+
+  String product
 
   Map<Double, Map<UUID, Integer>> byPrice = [:]
 
@@ -29,7 +31,7 @@ class Shelf {
     for(def unitPrice : sorted) {
      // log.info('unitprice=' + unitPrice)
       if(unitPrice <= price) {
-        def units = byPrice.get(unitPrice) //.value
+        Map<UUID, Integer> units = byPrice.get(unitPrice) //.value
        // log.info "units= ${units}"
         for(def supplier : units) {
           //log.info("supplier ${supplier} ${supplier.value} ${toBuy}")
@@ -78,15 +80,47 @@ class Shelf {
     return quantity
   }
 
-  def getBestPrice() {
-    def bestPrice
+  def getAtBestPrice() {
+
+    def bestPrice = [supplier: null, price: null]
     this.byPrice.each { key, value ->
-      if(bestPrice == null || bestPrice > key) {
-        bestPrice = key
+      println("key= ${key}, val= ${value}")
+      if(bestPrice.price == null || bestPrice.price > key) {
+        bestPrice.price = key
+        bestPrice.supplier = value.keySet().getAt(0)
       }
     }
+    println("best price for ${product} is ${bestPrice}")
     return bestPrice
   }
+
+
+  def getBestPrice() {
+    if(this.byPrice.size() > 0) {
+      return this.byPrice.keySet().sort().get(0)
+    }
+    return null
+  }
+
+  def takeOffShelf(UUID supplier, price) {
+    def removed = false
+    def supplierMap = byPrice.get(price)
+    if(supplierMap) {
+      def theSupplierItemCount = supplierMap.get(supplier)
+      if (theSupplierItemCount) {
+        theSupplierItemCount -- //= theSupplierItemCount - 1
+        if (theSupplierItemCount == 0) {
+          supplierMap.remove(price)
+        } else {
+          supplierMap.put(supplier, theSupplierItemCount)
+        }
+        removed = true
+      }
+    }
+
+    removed
+  }
+
 
   def getAvailableCount(){
     Integer total = 0

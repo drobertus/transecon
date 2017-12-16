@@ -68,4 +68,34 @@ class ShelfSpec extends Specification {
     assert purchasedHigh.countBought() == 2
     assert purchasedHigh.totalSpent() == price1 * 2
   }
+
+
+  def "getAtBestPrice and removeFromShelf"() {
+    shelf.addToShelf(producer2, 3, 12)
+    shelf.addToShelf(producer1, 2, 11)
+
+    when: "we getAtBestPrice"
+    def bestPriced = shelf.getAtBestPrice()
+    then: "we should get a supplier and thier best price"
+    assert bestPriced == [supplier: producer1, price: 11]
+
+    when: "we takeOffShelf for that supplier/price"
+    def removed = shelf.takeOffShelf(bestPriced.supplier, bestPriced.price)
+
+    then:
+    assert removed
+    shelf.byPrice.get(11.0d).get(producer1) == 1
+    shelf.byPrice.get(12.0d).get(producer2) == 3
+
+    when: "we try and remove a non-existint price/supplier combo"
+    removed = shelf.takeOffShelf(producer2, 11.0)
+
+    then:
+    assert !removed
+    shelf.byPrice.get(11.0d).get(producer1) == 1
+    shelf.byPrice.get(12.0d).get(producer2) == 3
+
+  }
+
+
 }

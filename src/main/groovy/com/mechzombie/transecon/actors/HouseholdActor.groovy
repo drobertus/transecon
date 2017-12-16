@@ -2,18 +2,21 @@ package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
+import com.mechzombie.transecon.messages.dtos.Order
 import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonOutput
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import groovyx.gpars.dataflow.Promise
 
 @Slf4j
 class HouseholdActor extends BaseEconActor {
 
-  def demands = [:] //this that the household needs per unit time
-  def resources = [:] //this owned by or produced by the household per unit time
+  Map<String, Integer> demands = [:] //this that the household needs per unit time
+  Map<String, Integer> resources = [:] //this owned by or produced by the household per unit time
   //def money = 0
 
-  def turnNeeds = [:]
+  Map<String, Integer> turnNeeds = [:]
 
   HouseholdActor(UUID id = UUID.randomUUID(), Map demands = [:], Map resources = [:]) {
     super(id)
@@ -48,6 +51,12 @@ class HouseholdActor extends BaseEconActor {
 
       react {
         def theResponse
+        if (!it) {
+          println("msg was null!!")
+          //reply null
+          return
+        }
+        it = (Message) it
         log.debug "HouseHold ${this.uuid} received ${it.type}"
         switch (it.type) {
           case String:
@@ -74,18 +83,24 @@ class HouseholdActor extends BaseEconActor {
             def available = getBankBalance()
             // get prices of products from markets
             turnNeeds.forEach { prod, count ->
-
-              Map<UUID, Double> prices = getPrices(prod)
-              //TODO: make purchase
-
-              this.purchaseItem(prod, prices.value[0], prices.keySet()[0], count)
-
+              println("need for ${prod} in quantity ${count}")
+              def response  = getPrices(prod)
+              println("response ==> ${response}")
+              if (response.size() == 0 ) {
+                // TODO: What does this mean for the Household?  Does it die?
+                //we need to keep trying t purchase supplies
+                println("No source of ${prod} -- ${response}")
+                sleep(100)
+                this.reg.messageActor(this.uuid, new Message(Command.PURCHASE_SUPPLIES))
+              }else {
+                Map<UUID, Double> prices = response
+                // TODO: make purchase
+                println("uuid= ${prices.keySet()[0]}")
+                def key = prices.keySet()[0]
+                def bought = this.purchaseItem(prod, prices.get(key), key, count)
+                println("bought= ${bought}")
+              }
             }
-
-
-            //get optimal prices per prodcut
-
-            //make purchases
 
             this.completeStep(Command.PURCHASE_SUPPLIES)
             break
@@ -108,15 +123,17 @@ class HouseholdActor extends BaseEconActor {
 
 
             //TODO: encapsulate this business logic
-            def prod = it.vals.product
-            def price = it.vals.price
-            def market = it.vals.market
+            String prod = it.vals.product
+            double price = it.vals.price
+            UUID market = it.vals.market
             log.info("purchasing ${it.vals}")
             def theHold = Bank.holdDebitAmount(this.uuid, price)
+
             if(theHold.amount == price ) {
-              def response = purchaseItem(prod, price, market)
-              log.info("purchase response => ${response}")
-              if (response.get() == 'OK') {
+              Promise<Order> response = purchaseItem(prod, price, market)
+              log.info("purchase response => ${response.get()}")
+              Order order = response.get()
+              if (order.orderItemsRemaining == [:]) {
                 def prodCount = resources.get(prod)
                 if(!prodCount) {
                   prodCount = 0
@@ -154,26 +171,42 @@ class HouseholdActor extends BaseEconActor {
 
   Map<UUID, Double> getPrices(product) {
 
+    Map<UUID, Double> returnedPrices = [:]
     //make calls to all markets and get prices
-    def prices = [:]
+    Map<UUID, Promise<Double>> prices = [:]
     this.reg.getMarkets().each {
       def priceProm = it.sendAndPromise(new Message(Command.PRICE_ITEM, [product: product]));
       prices.put(it.uuid, priceProm)
     }
     prices.each { k, v ->
-      def aPrice = v.get()
-      prices.put(k, aPrice)
+      Double aPrice = v.get()
+      println ("aprive= ${aPrice}")
+      if (aPrice != 'NA') {
+        returnedPrices.put(k, aPrice)
+      }
     }
-    return prices
+    return returnedPrices
   }
 
-  private def purchaseItem(product, price, market, count){
-    return reg.messageActor(market, new Message(Command.FULFILL_ORDER, [buyer: this.uuid, product: product, price: price, count: count]))
+  private Promise<Order> purchaseItem(product, price, market, count = 1){
+    Map<String, Integer> shoppingList = [:]
+    shoppingList.put(product, count)
+
+    return submitOrder(shoppingList, price, market)
+  }
+
+  private Promise<Order> submitOrder(shoppingList, budget, market){
+    def o = new Order()
+    o.setCustomer(this.uuid)
+    o.setMarket(market)
+    o.setBudgetedAmount(budget)
+    o.setOrderItemsRemaining(shoppingList)
+    return reg.messageActor(market, new Message(Command.FULFILL_ORDER, [o]))
   }
 
   @Override
   def clear() {
-    demands.clear()
+    this.demands.clear()
     this.resources.clear()
   }
 }

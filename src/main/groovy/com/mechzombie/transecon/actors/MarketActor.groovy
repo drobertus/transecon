@@ -3,6 +3,7 @@ package com.mechzombie.transecon.actors
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.messages.Purchase
+import com.mechzombie.transecon.messages.dtos.Order
 import com.mechzombie.transecon.resources.Bank
 import com.mechzombie.transecon.resources.Shelf
 import groovy.util.logging.Slf4j
@@ -72,33 +73,58 @@ class MarketActor extends BaseEconActor {
           case Command.FULFILL_ORDER:
             //println("purchase => ${it.vals}")
             def params = it.vals
-            def buyer = params.buyer
-            def product = params.product
-            def price = params.price
+           // def buyer = params.buyer
+            Order order = params[0]
+            ///def price = params.price
             //TODO: add count to purchase
-            def count = params.count ? params.count : 1
+           // def count = params.count ? params.count : 1
 
-            def shelf = inventory.get(product)
-            println ("the shelf = ${shelf}")
-            if(shelf) {
+            def paymentsToProducers = [:]
 
-              //map of producer: <price: count>
-              Purchase bought = shelf.buyAtPrice(price, count)
-
-              log.info("bought= ${bought.totalBought}, price = ${price}, count= ${count}")
-              if (bought.totalBought > 0 ){
-
-                bought.getSuppliersAndAmountsToPay().each {source, amt ->
-                  Bank.transferFunds(buyer, source, amt)
+            order.orderItemsRemaining.each { product, count ->
+              def shelf = inventory.get(product)
+              println("the shelf = ${shelf}")
+              if (shelf) {
+                // this market can purchase these items
+                def soldItem
+                count.times {
+                 soldItem = shelf.getAtBestPrice()
+                 //sold items allows us to credit a producer
+                  def supp = paymentsToProducers.get(soldItem.supplier)
+                  if (!supp) {
+                    paymentsToProducers.put(soldItem.supplier, soldItem.price)
+                  }
+                  else {
+                    paymentsToProducers.put(soldItem.supplier, soldItem.price + supp)
+                  }
+                  shelf.takeOffShelf(soldItem.supplier, soldItem.price)
+                  order.fulfillItem(product, soldItem.price)
                 }
-                //get money from the buyer UUID
-
-                //send money to the various producers
-
-                //in future this may be changed to active purchasing and selling
-                //for now it will be a clearing house
-                theResponse = 'OK'
               }
+            }
+
+
+
+//
+//              //map of producer: <price: count>
+//              Purchase bought = shelf.buyAtPrice(price, count)
+//
+//              log.info("bought= ${bought.totalBought}, price = ${price}, count= ${count}")
+//              if (bought.totalBought > 0 ){
+//
+//                bought.getSuppliersAndAmountsToPay().each {source, amt ->
+//
+//                  Bank.transferFunds(buyer, source, amt)
+//                }
+//                //get money from the buyer UUID
+//                //send money to the various producers
+//                //in future this may be changed to active purchasing and selling
+//                //for now it will be a clearing house
+//                //theResponse = 'OK'
+//              }
+
+          theResponse = order
+
 //              //now compare prices
 //              for(int i=0; i < shelf; i ++) {
 //                def prod = shelf.getAt(i)
@@ -127,10 +153,10 @@ class MarketActor extends BaseEconActor {
 //                }
 //              }
 
-            }
-            else {
-              theResponse = '404'
-            }
+            //}
+            //else {
+            //  theResponse = '404'
+            //}
             break
           case Command.TAKE_TURN:
             theResponse = 'hhrutn.'
@@ -138,20 +164,13 @@ class MarketActor extends BaseEconActor {
           case Command.PRICE_ITEM:
             def product = it.vals.product
             def shelf = this.inventory.get(product)
-            def bestPrice = shelf.getBestPrice()
-          //  println("found shelf ${shelf} for product ${product}")
-//            if(shelf) {
-//
-//              shelf.each {
-//                def aPrice = it[0]
-//                if(!bestPrice || aPrice < bestPrice) {
-//                  bestPrice = aPrice
-//                }
-//              }
-              // find the best price available
-              theResponse = bestPrice
-      //      }
+            if(shelf){
+              def bestPrice = shelf.getBestPrice()
 
+              theResponse = bestPrice
+            } else {
+              theResponse = 'NA'
+            }
             break
           case Command.STATUS:
             theResponse = status()
