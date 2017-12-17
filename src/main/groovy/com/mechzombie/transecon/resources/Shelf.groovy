@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
 @Slf4j
+@CompileStatic
 class Shelf {
 
   String product
@@ -20,23 +21,23 @@ class Shelf {
    * @param price - per unit price to buy at
    * @param count - number of units to buy
    */
-  Purchase buyAtPrice(price, count) {
+  Purchase buyAtPrice(Double price, int count) {
     def totalFunds = price * count
 
     def bought = new Purchase(product: this.product)
 
     def sorted = byPrice.keySet().sort()//.sort{ key, val-> key}
    // log.info ("sorted by price = ${sorted} ${price} ${count}")
-    def toBuy = count
+    int toBuy = count
     for(def unitPrice : sorted) {
      // log.info('unitprice=' + unitPrice)
       if(unitPrice <= price) {
         Map<UUID, Integer> units = byPrice.get(unitPrice) //.value
        // log.info "units= ${units}"
-        for(def supplier : units) {
+        units.entrySet().each { supplier ->
+        //for(Map.Entry<UUID, Integer> supplier : units) {
           //log.info("supplier ${supplier} ${supplier.value} ${toBuy}")
           if (supplier.value > 0 && toBuy >  0) {
-
 
             if(toBuy >= supplier.value) {
              // log.info("we will buy!")
@@ -82,18 +83,26 @@ class Shelf {
 
   def getAtBestPrice() {
 
-    def bestPrice = [supplier: null, price: null]
+    def bestPrice = new BestPrice()
     this.byPrice.each { key, value ->
-      println("key= ${key}, val= ${value}")
+      // println("key= ${key}, val= ${value}")
       if(bestPrice.price == null || bestPrice.price > key) {
         bestPrice.price = key
         bestPrice.supplier = value.keySet().getAt(0)
       }
     }
-    println("best price for ${product} is ${bestPrice}")
+    //println("best price for ${product} is ${bestPrice}")
     return bestPrice
   }
 
+  class BestPrice {
+    UUID supplier
+    Double price
+
+    boolean equals(Map obj) {
+      return this.supplier == obj.supplier && this.price == obj.price
+    }
+  }
 
   def getBestPrice() {
     if(this.byPrice.size() > 0) {
@@ -126,7 +135,7 @@ class Shelf {
     Integer total = 0
     byPrice.each { k, value ->
       value.values().toArray().every {
-        total =+ it
+        total =+ (Integer)it
       }
     }
     return total

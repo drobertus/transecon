@@ -1,5 +1,6 @@
 package com.mechzombie.transecon.resources
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
 import java.util.concurrent.ConcurrentHashMap
@@ -7,12 +8,13 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.function.UnaryOperator
 
 @Slf4j
+@CompileStatic
 class Bank {
 
   protected static HashMap<UUID, AtomicReference<Double>> account = new HashMap<UUID, AtomicReference<Double>>()
   protected static Map<UUID, UUID> privateLookup = new HashMap<UUID, UUID>()
 
-  protected static ConcurrentHashMap<UUID, AccountLock> locks = new ConcurrentHashMap<UUID, AccountLock>()
+  static ConcurrentHashMap<UUID, AccountLock> locks = [:] as ConcurrentHashMap //new ConcurrentHashMap<UUID, AccountLock>()
 
   static Double getAccountValue(UUID uuid){
     return account.get(uuid).get()
@@ -22,7 +24,7 @@ class Bank {
   * @param publicUUID required for deposits
   * @return privateUUID required for drawing on account
   */
-  static UUID createAccount(publicUUID) {
+  static UUID createAccount(UUID publicUUID) {
     def privateID = UUID.randomUUID()
     privateLookup.put(privateID, publicUUID)
     account.put(publicUUID, new AtomicReference<Double>(0.0d))
@@ -52,7 +54,7 @@ class Bank {
         }
       })
     }
-    println( " response = ${response}")
+    // println( " response = ${response}")
     return response
   }
   /**

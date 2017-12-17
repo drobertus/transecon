@@ -13,9 +13,8 @@ class Message {
       valid = false
     }
 
-
     params.each {
-      println ("it= ${it.class}")
+      //println ("it= ${it.class}")
       if(vals instanceof String && !vals.get(it)) {
         valid = false
       }

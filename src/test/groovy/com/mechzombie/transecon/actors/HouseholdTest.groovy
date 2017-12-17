@@ -1,13 +1,8 @@
-package com.mechzombie.transecon
+package com.mechzombie.transecon.actors
 
-import com.mechzombie.transecon.actors.HouseholdActor
-import com.mechzombie.transecon.actors.Registry
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
 import spock.lang.Shared
-import spock.lang.Specification
 
 class HouseholdTest extends BaseActorTest {
 

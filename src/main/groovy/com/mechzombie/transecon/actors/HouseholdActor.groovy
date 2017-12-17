@@ -82,22 +82,22 @@ class HouseholdActor extends BaseEconActor {
             //TODO:  we need to buy what the household needs
             log.info("need to purchase ${turnNeeds}")
             def available = getBankBalance()
-            println("hh cash = ${available}")
+            // println("hh cash = ${available}")
             // get prices of products from markets
             turnNeeds.forEach { prod, count ->
-              println("need for ${prod} in quantity ${count}")
+              // println("need for ${prod} in quantity ${count}")
               def response  = getPrices(prod)
-              println("response ==> ${response}")
+              // println("response ==> ${response}")
               if (response.size() == 0 ) {
                 // TODO: What does this mean for the Household?  Does it die?
                 //we need to keep trying t purchase supplies
-                println("No source of ${prod} -- ${response}")
+                //println("No source of ${prod} -- ${response}")
                 sleep(100)
                 this.reg.messageActor(this.uuid, new Message(Command.PURCHASE_SUPPLIES))
               }else {
                 Map<UUID, Double> prices = response
                 // TODO: make purchase
-                println("uuid= ${prices.keySet()[0]}")
+                // println("uuid= ${prices.keySet()[0]}")
                 def key = prices.keySet()[0]
                 def budget = count * prices.get(key)
 
@@ -190,7 +190,7 @@ class HouseholdActor extends BaseEconActor {
     }
     prices.each { k, v ->
       Double aPrice = v.get()
-      println ("aprive= ${aPrice}")
+      // println ("aprive= ${aPrice}")
       if (aPrice > 0) {
         returnedPrices.put(k, aPrice)
       }

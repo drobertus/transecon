@@ -18,10 +18,10 @@ class Main implements Runnable {
     def wm = new WorldModel()
 
     Scanner sc = new Scanner(System.in);
-    println "model name?"
+    // println "model name?"
     def modelName = sc.nextLine()// 'What is model name?'
     wm.modelName = modelName
-    println("households?")
+    // println("households?")
 
     def households = sc.nextInt() //System.console().readLine 'How many households?'
 
@@ -35,29 +35,13 @@ class Main implements Runnable {
       hh.start()
       wm.households.put(id, hh)
 
-      println "added household ${id}"
+      //println "added household ${id}"
     }
 
     def main = new Main(wm)
     main.scanner = sc
 
     theModel = new Thread(main).run()
-
-//        def act1 = new HouseholdActor()
-//        act1.start()
-//        def response = null
-//        act1.sendAndContinue 'Message', {reply ->
-//            println "I received reply: $reply"
-//            response = reply
-//        }
-//
-//
-//        while(response == null) {
-//            println('waiting')
-//            Thread.sleep (20)
-//        }
-//
-//        println("got response!!")
   }
 
   void run() {

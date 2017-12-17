@@ -3,17 +3,19 @@ package com.mechzombie.transecon.actors
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
 
 @Slf4j
+//@CompileStatic
 abstract class BaseEconActor extends DefaultActor {
 
-  def lastCompletedTurn = 0
-  protected currentTurnStatus = [:]
-  protected stepList
+  int lastCompletedTurn = 0
+  protected Map currentTurnStatus = [:]
+  protected List stepList
   def builder = new JsonBuilder()
-  def reg = Registry.instance
+  Registry reg = Registry.instance
 
   UUID uuid
   UUID privateUUID
@@ -82,7 +84,7 @@ abstract class BaseEconActor extends DefaultActor {
   }
   abstract def status()
 
-  protected def sendMoney(UUID recipient, amount, reason = null) {
+  protected def sendMoney(UUID recipient, Double amount, reason = null) {
     return Bank.deposit(recipient, amount)
   }
 

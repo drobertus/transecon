@@ -77,7 +77,7 @@ class ShelfSpec extends Specification {
     when: "we getAtBestPrice"
     def bestPriced = shelf.getAtBestPrice()
     then: "we should get a supplier and thier best price"
-    assert bestPriced == [supplier: producer1, price: 11]
+    assert bestPriced.equals([supplier: producer1, price: 11])
 
     when: "we takeOffShelf for that supplier/price"
     def removed = shelf.takeOffShelf(bestPriced.supplier, bestPriced.price)

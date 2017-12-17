@@ -1,14 +1,13 @@
 package com.mechzombie.transecon
 
+import com.mechzombie.transecon.actors.BaseActorTest
 import com.mechzombie.transecon.actors.HouseholdActor
 import com.mechzombie.transecon.actors.MarketActor
-import com.mechzombie.transecon.actors.Registry
 import com.mechzombie.transecon.actors.SupplierActor
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
 import spock.lang.Shared
-import spock.lang.Specification
 
 class TradeSpec extends BaseActorTest {
 

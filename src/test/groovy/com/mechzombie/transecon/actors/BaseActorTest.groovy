@@ -1,4 +1,4 @@
-package com.mechzombie.transecon
+package com.mechzombie.transecon.actors
 
 import com.mechzombie.transecon.actors.Registry
 import spock.lang.Shared

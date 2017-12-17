@@ -166,11 +166,10 @@ class SupplierActor extends BaseEconActor{
             //(fixed things as well as time-sensitive things RE: labor)
             def consumed = [:]
             inputs.each { product, amount ->
-              println("getting ${product}, amount needed per: ${amount}")
 
               def amountUsed = amount * this.productionGoalForTurn
               def onHand = resources.get(product)
-              println("onHand = ${onHand}")
+
               if(product == 'labor' && onHand == null) {
                 onHand = amountUsed
               }
@@ -195,7 +194,7 @@ class SupplierActor extends BaseEconActor{
 
             def shipment = reg.messageActor(reg.markets[0].uuid, new Message(Command.STOCK_ITEM,
                 [producer: this.uuid, product: this.product, price: this.perUnitPrice, quantity: productionGoalForTurn]))
-            println ("shipment==== ${shipment.get()}")
+
             if(shipment.get() == this.productionGoalForTurn) {
               this.completeStep(Command.SHIP_ITEMS)
             }

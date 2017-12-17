@@ -21,7 +21,7 @@ class MarketActor extends BaseEconActor {
 
     Shelf shelf = inventory.get(prodName)
     if(!shelf) {
-      println("creating new shelf for ${prodName}")
+     // println("creating new shelf for ${prodName}")
 
       shelf = new Shelf(prodName)
       inventory.put(prodName, shelf)
@@ -63,10 +63,6 @@ class MarketActor extends BaseEconActor {
             def price = params.price
             def quantity = params.quantity
 
-//            Shelf shelf = inventory.get(product)
-
-            //addToShelf
-
             theResponse = shelveProduct(supplier, product, price, quantity) // shelf.size()  //respond to the suplier with the number of items in invtentory
             break
 
@@ -83,7 +79,7 @@ class MarketActor extends BaseEconActor {
 
             order.orderItemsRemaining.each { product, count ->
               def shelf = inventory.get(product)
-              println("the shelf = ${shelf}")
+             // println("the shelf = ${shelf}")
               if (shelf) {
                 // this market can purchase these items
                 def soldItem
@@ -103,60 +99,9 @@ class MarketActor extends BaseEconActor {
               }
             }
 
+//          println("fulfill order! ${order}")
+            theResponse = order
 
-
-//
-//              //map of producer: <price: count>
-//              Purchase bought = shelf.buyAtPrice(price, count)
-//
-//              log.info("bought= ${bought.totalBought}, price = ${price}, count= ${count}")
-//              if (bought.totalBought > 0 ){
-//
-//                bought.getSuppliersAndAmountsToPay().each {source, amt ->
-//
-//                  Bank.transferFunds(buyer, source, amt)
-//                }
-//                //get money from the buyer UUID
-//                //send money to the various producers
-//                //in future this may be changed to active purchasing and selling
-//                //for now it will be a clearing house
-//                //theResponse = 'OK'
-//              }
-          println("fulfill order! ${order}")
-          theResponse = order
-
-//              //now compare prices
-//              for(int i=0; i < shelf; i ++) {
-//                def prod = shelf.getAt(i)
-//              //  println("item on shelf= ${prod}")
-//                if (prod[0] <= price) {
-//                  //we can purchase
-//
-//                  def margin = price - prod[0]
-//                  Bank.deposit(this.uuid, margin)
-//                //  this.money += margin
-//                  //message the producer with the amount, keep the difference
-//                  def producer = prod[1]
-//                  def send = this.sendMoney(producer, (int)prod[0], 'sale')
-//                  //println("---- sendMoney ${send}")
-//                  if(send) {
-//                    theResponse = "OK"
-//                    shelf.remove(i)
-//                    break
-//                  }else {
-//                    theResponse = 'reimbursment to supplier failed'
-//                  }
-//
-//                }
-//                else {
-//                  theResponse = "NSF"
-//                }
-//              }
-
-            //}
-            //else {
-            //  theResponse = '404'
-            //}
             break
           case Command.TAKE_TURN:
             theResponse = 'hhrutn.'
@@ -190,6 +135,5 @@ class MarketActor extends BaseEconActor {
   def clear() {
     inventory.clear()
   }
-
 
 }

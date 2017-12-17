@@ -1,4 +1,4 @@
-package com.mechzombie.transecon
+package com.mechzombie.transecon.messages.dtos
 
 import com.mechzombie.transecon.messages.dtos.Order
 import com.mechzombie.transecon.resources.AccountLock
