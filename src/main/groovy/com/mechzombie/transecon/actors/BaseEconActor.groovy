@@ -33,6 +33,11 @@ abstract class BaseEconActor extends DefaultActor {
 
   abstract def clear()
 
+  /**
+   * Set the status of the most recent step to "complete"
+   * @param step
+   * @return
+   */
   def completeStep(step) {
 
     def found = currentTurnStatus.get(step)
@@ -45,6 +50,10 @@ abstract class BaseEconActor extends DefaultActor {
     }
   }
 
+  /**
+   * Return the status of the last run
+   * @return
+   */
   def turnStatus(){
     def status = 'complete'
     if (currentTurnStatus.size() == stepList.size()){
