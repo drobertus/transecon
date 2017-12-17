@@ -5,9 +5,8 @@ import spock.lang.Specification
 class BankSpec extends Specification {
 
 
-  def cleanup() {
-    Bank.account.clear()
-    Bank.privateLookup.clear()
+  def setupSpec() {
+    Bank.clear()
   }
 
   def "test the creation of an account"() {

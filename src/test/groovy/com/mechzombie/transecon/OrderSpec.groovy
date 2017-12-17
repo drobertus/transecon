@@ -1,6 +1,7 @@
 package com.mechzombie.transecon
 
 import com.mechzombie.transecon.messages.dtos.Order
+import com.mechzombie.transecon.resources.AccountLock
 import spock.lang.Specification
 
 class OrderSpec extends Specification{
@@ -28,7 +29,7 @@ class OrderSpec extends Specification{
     def o = new Order()
 
     then:
-    o.getBudgetedAmount() == 0.0d
+    o.getAccountLock() == null
     o.getFulfilledItems() == [:]
     o.getTotalSpentInFulfillment() == 0.0d
     o.getOrderItemsRemaining() == [:]
@@ -46,7 +47,7 @@ class OrderSpec extends Specification{
     then: 'the order should not be fulfilled'
     canFulfill == false
     // money adds up
-    o.budgetedAmount == 0.0
+    o.accountLock == null
     o.getTotalSpentInFulfillment() == 0.0
     // items add up
     o.getFulfilledItems() == [:]
@@ -57,14 +58,16 @@ class OrderSpec extends Specification{
 
     setup:
     def tobeBought = [paper: 3, spoons: 5]
-    def o = new Order(orderItemsRemaining: tobeBought, budgetedAmount: 100.0)
+    AccountLock lock = new AccountLock(null)
+    lock.amount = 100.0
+    def o = new Order(orderItemsRemaining: tobeBought, accountLock: lock)
 
     when: 'we attempt to fulfill an order with no funds and a price'
     def canFulfill = o.fulfillItem('paper', 13)
 
     then: "the order is partially fulfilled"
     canFulfill
-    o.budgetedAmount == 100
+    o.accountLock.amount == 100
     o.getTotalSpentInFulfillment() == 13.0
     o.getFulfilledItems() == [paper: 1]
     o.orderItemsRemaining == [paper: 2, spoons: 5]
@@ -74,7 +77,9 @@ class OrderSpec extends Specification{
 
     setup:
     def tobeBought = [paper: 2]
-    def o = new Order(orderItemsRemaining: tobeBought, budgetedAmount: 20.0)
+    AccountLock lock = new AccountLock(null)
+    lock.amount = 20.0
+    def o = new Order(orderItemsRemaining: tobeBought, accountLock: lock)
 
     when: 'we attempt to fulfill an order with no funds and a price'
     def canFulfill1 = o.fulfillItem('paper', 13)
@@ -84,7 +89,7 @@ class OrderSpec extends Specification{
     canFulfill1
     !canFulfill2
 
-    o.budgetedAmount == 20
+    o.accountLock.amount == 20
     o.getTotalSpentInFulfillment() == 13.0
     o.getFulfilledItems() == [paper: 1]
     o.orderItemsRemaining == [paper: 1]

@@ -9,7 +9,7 @@ import groovy.util.logging.Slf4j
 class SupplierActor extends BaseEconActor{
 
   def product
-  def perUnitPrice = 20
+  def perUnitPrice = 20 //TODO: figure out how to handle price
   def inputs = [:]
   def resources = [:]
   Map<UUID, Double> employees = [:]

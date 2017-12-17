@@ -135,6 +135,7 @@ class Bank {
   static def clear() {
     account.clear()
     privateLookup.clear()
+    this.locks.clear()
   }
 
 

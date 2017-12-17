@@ -77,7 +77,7 @@ class TurnCycle extends BaseActorTest {
     assert supplier.resources.get('corn') == 49
     assert market.inventory.get(product).getAvailableCount() == 1
     assert household.getResources() == [food: 2]
-    assert household.getBankBalance() == salary - consumerEvenPrice
+    assert household.getBankBalance() == salary - supplier.perUnitPrice
 
   }
 

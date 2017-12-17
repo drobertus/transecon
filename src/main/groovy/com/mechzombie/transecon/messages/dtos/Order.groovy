@@ -1,5 +1,6 @@
 package com.mechzombie.transecon.messages.dtos
 
+import com.mechzombie.transecon.resources.AccountLock
 import groovy.transform.CompileStatic
 
 @CompileStatic
@@ -19,8 +20,7 @@ class Order {
    *  It cuold be a double for the amount available OR
    *  could be (or in addition) an AccountLock,
    */
-  double budgetedAmount = 0.0
-
+  AccountLock accountLock
   /**
    * Map of the the requested items to types
    */
@@ -34,10 +34,9 @@ class Order {
 
 
   boolean fulfillItem (String product, double amount){
-    if(budgetedAmount >= (totalSpentInFulfillment + amount) ) {
+    if(accountLock?.amount >= (totalSpentInFulfillment + amount) ) {
 
       //TODO:
-
       def remaining = orderItemsRemaining.get(product)
       if (remaining) {
         //remove an order item, delete a key if reaches 0

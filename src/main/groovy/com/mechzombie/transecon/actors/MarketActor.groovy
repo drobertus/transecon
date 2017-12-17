@@ -122,7 +122,7 @@ class MarketActor extends BaseEconActor {
 //                //for now it will be a clearing house
 //                //theResponse = 'OK'
 //              }
-
+          println("fulfill order! ${order}")
           theResponse = order
 
 //              //now compare prices
@@ -169,7 +169,7 @@ class MarketActor extends BaseEconActor {
 
               theResponse = bestPrice
             } else {
-              theResponse = 'NA'
+              theResponse = -1.0
             }
             break
           case Command.STATUS:

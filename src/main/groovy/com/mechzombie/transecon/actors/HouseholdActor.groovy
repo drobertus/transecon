@@ -17,6 +17,7 @@ class HouseholdActor extends BaseEconActor {
   //def money = 0
 
   Map<String, Integer> turnNeeds = [:]
+  double turnBudget = 0.0
 
   HouseholdActor(UUID id = UUID.randomUUID(), Map demands = [:], Map resources = [:]) {
     super(id)
@@ -81,6 +82,7 @@ class HouseholdActor extends BaseEconActor {
             //TODO:  we need to buy what the household needs
             log.info("need to purchase ${turnNeeds}")
             def available = getBankBalance()
+            println("hh cash = ${available}")
             // get prices of products from markets
             turnNeeds.forEach { prod, count ->
               println("need for ${prod} in quantity ${count}")
@@ -97,12 +99,20 @@ class HouseholdActor extends BaseEconActor {
                 // TODO: make purchase
                 println("uuid= ${prices.keySet()[0]}")
                 def key = prices.keySet()[0]
-                def bought = this.purchaseItem(prod, prices.get(key), key, count)
-                println("bought= ${bought}")
+                def budget = count * prices.get(key)
+
+                def lock = Bank.holdDebitAmount(this.uuid, budget)
+                //println("price for uuid = ${prices.get(key)}")
+                //if(prices.get(key) > 0) {
+                def bought = this.purchaseItem(prod, lock, key, count)
+                addItemsToCollection(resources, bought.get().fulfilledItems)
+
+                if(bought.get().orderItemsRemaining == [:]) {
+                  this.completeStep(Command.PURCHASE_SUPPLIES)
+                }
               }
             }
 
-            this.completeStep(Command.PURCHASE_SUPPLIES)
             break
           case Command.CONSUME:
 
@@ -121,7 +131,6 @@ class HouseholdActor extends BaseEconActor {
             break
           case Command.PURCHASE_ITEM:
 
-
             //TODO: encapsulate this business logic
             String prod = it.vals.product
             double price = it.vals.price
@@ -130,7 +139,7 @@ class HouseholdActor extends BaseEconActor {
             def theHold = Bank.holdDebitAmount(this.uuid, price)
 
             if(theHold.amount == price ) {
-              Promise<Order> response = purchaseItem(prod, price, market)
+              Promise<Order> response = purchaseItem(prod, theHold, market)
               log.info("purchase response => ${response.get()}")
               Order order = response.get()
               if (order.orderItemsRemaining == [:]) {
@@ -156,6 +165,7 @@ class HouseholdActor extends BaseEconActor {
             //this need to be done in line to prevent double dipping
             break
           case Command.TAKE_TURN:
+
             theResponse = runTurn()
             break
           default:
@@ -181,27 +191,42 @@ class HouseholdActor extends BaseEconActor {
     prices.each { k, v ->
       Double aPrice = v.get()
       println ("aprive= ${aPrice}")
-      if (aPrice != 'NA') {
+      if (aPrice > 0) {
         returnedPrices.put(k, aPrice)
       }
     }
     return returnedPrices
   }
 
-  private Promise<Order> purchaseItem(product, price, market, count = 1){
+  private Promise<Order> purchaseItem(product, accountLock, market, count = 1){
     Map<String, Integer> shoppingList = [:]
     shoppingList.put(product, count)
 
-    return submitOrder(shoppingList, price, market)
+    return submitOrder(shoppingList, accountLock, market)
   }
 
-  private Promise<Order> submitOrder(shoppingList, budget, market){
+  private void addItemsToCollection(Map<String, Integer> source, Map<String, Integer> addition) {
+    addition.each {product, count ->
+      def prodCount = source.get(product)
+      if(!prodCount) {
+        source.put(product, count)
+      } else {
+        source.put(product, count + prodCount)
+      }
+
+    }
+  }
+
+  private Promise<Order> submitOrder(shoppingList, accountLock, market){
     def o = new Order()
     o.setCustomer(this.uuid)
     o.setMarket(market)
-    o.setBudgetedAmount(budget)
+    //o.setBudgetedAmount(accountLock.amount)
+    o.setAccountLock(accountLock)
     o.setOrderItemsRemaining(shoppingList)
-    return reg.messageActor(market, new Message(Command.FULFILL_ORDER, [o]))
+    def response = reg.messageActor(market, new Message(Command.FULFILL_ORDER, [o]))
+    println("submitORder response = ${response}")
+    response
   }
 
   @Override
