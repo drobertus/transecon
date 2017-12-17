@@ -1,5 +1,6 @@
 package com.mechzombie.transecon.actors
 
+import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
@@ -8,18 +9,17 @@ import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
 
 @Slf4j
-//@CompileStatic
+@CompileStatic
 abstract class BaseEconActor extends DefaultActor {
 
   int lastCompletedTurn = 0
-  protected Map currentTurnStatus = [:]
-  protected List stepList
-  def builder = new JsonBuilder()
+  protected Map<Command, String> currentTurnStatus = [:]
+  protected List<Command> stepList
+  JsonBuilder builder = new JsonBuilder()
   Registry reg = Registry.instance
 
   UUID uuid
   UUID privateUUID
-  def transactions = []
 
   BaseEconActor(UUID id = UUID.randomUUID()) {
     this.uuid = id
@@ -36,9 +36,9 @@ abstract class BaseEconActor extends DefaultActor {
   /**
    * Set the status of the most recent step to "complete"
    * @param step
-   * @return
+   * @return String the status of the step
    */
-  def completeStep(step) {
+  def completeStep(Command step) {
 
     def found = currentTurnStatus.get(step)
     if(found != null) {
@@ -55,12 +55,12 @@ abstract class BaseEconActor extends DefaultActor {
    * @return
    */
   def turnStatus(){
-    def status = 'complete'
+    String status = 'complete'
     if (currentTurnStatus.size() == stepList.size()){
-      for(def obj : currentTurnStatus) { //.each {k,v ->
-        if (obj.value != 'complete'){
+      currentTurnStatus.entrySet().each {
+      //for(Map.Entry<String, String> obj : currentTurnStatus) { //.each {k,v ->
+        if (it.value != 'complete'){
           status = 'incomplete'
-          break
         }
       }
       log.info("returning status of ${status} for ${this.uuid}")
