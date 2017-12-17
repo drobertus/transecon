@@ -14,7 +14,7 @@ class Bank {
   protected static HashMap<UUID, AtomicReference<Double>> account = new HashMap<UUID, AtomicReference<Double>>()
   protected static Map<UUID, UUID> privateLookup = new HashMap<UUID, UUID>()
 
-  static ConcurrentHashMap<UUID, AccountLock> locks = [:] as ConcurrentHashMap //new ConcurrentHashMap<UUID, AccountLock>()
+  static ConcurrentHashMap<UUID, AccountLock> locks = [:] as ConcurrentHashMap
 
   static Double getAccountValue(UUID uuid){
     return account.get(uuid).get()
@@ -31,7 +31,14 @@ class Bank {
     return privateID
   }
 
-
+  /**
+   * Transfer funds directly from one account to another,return true
+   *
+   * @param privateSource - private UUID for the source Account
+   * @param publicDeposit - public UUID for the recipient
+   * @param amount - the amont to transfer
+   * @return Boolean - true if succeeds, false if fails
+   */
   static boolean transferFunds(UUID privateSource, UUID publicDeposit, Double amount) {
 
     UUID sourceAccount = privateLookup.get(privateSource)
@@ -42,7 +49,7 @@ class Bank {
         @Override
         Double apply(Double sourceAccountValue) {
           if (sourceAccountValue >= amount) {
-            def madeDeposit = Bank.deposit(publicDeposit, amount)
+            def madeDeposit = deposit(publicDeposit, amount)
             log.debug("made deposit side of transfer = ${madeDeposit}")
             if (madeDeposit) {
               sourceAccountValue = sourceAccountValue - amount
@@ -54,14 +61,13 @@ class Bank {
         }
       })
     }
-    // println( " response = ${response}")
     return response
   }
   /**
    * Synchronized access
    * @param uuid
    * @param amount
-   * @return
+   * @return boolean - true if succeeds
    */
   static boolean deposit(UUID uuid, Double amount) {
     AtomicReference<Double> val = account.get(uuid)
@@ -99,9 +105,7 @@ class Bank {
         }
       })
     }
-
     return theLock
-
   }
 
   static boolean completeDebit(AccountLock lock) {
@@ -112,7 +116,7 @@ class Bank {
 
     def theTrans = locks.get(lockId)
     if(theTrans) {
-      log.info("killing lock ${lockId}")
+      log.debug("killing lock with a completion ${lockId}")
       locks.remove(lockId)
       return true
     }
@@ -126,8 +130,8 @@ class Bank {
   static boolean cancelLock(UUID lockId) {
     AccountLock theTrans = locks.get(lockId)
     if(theTrans) {
-      Bank.deposit(theTrans.accountSource, theTrans.amount)
-      log.info("killing lock ${lockId}")
+      deposit(theTrans.accountSource, theTrans.amount)
+      log.debug("killing lock as part of cancelation ${lockId}")
       locks.remove(lockId)
       return true
     }
@@ -137,7 +141,7 @@ class Bank {
   static def clear() {
     account.clear()
     privateLookup.clear()
-    this.locks.clear()
+    locks.clear()
   }
 
 

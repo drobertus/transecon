@@ -19,7 +19,6 @@ import static groovyx.gpars.GParsPool.withPool
 
 @Slf4j
 @Singleton
-//@CompileStatic
 class Registry {
 
   PGroup pGroup = new DefaultPGroup(Runtime.getRuntime().availableProcessors())
@@ -69,7 +68,7 @@ class Registry {
   }
 
   private def _sysState() {
-    def status = new JsonBuilder()
+    JsonBuilder status = new JsonBuilder()
     def marketStatus = []
     def hhStatus = []
     def suppStatus = []
@@ -114,7 +113,6 @@ class Registry {
         e.printStackTrace()
       }
     }
-    //println("cleanup size = ${actors.size()}")
     Bank.clear()
   }
 }

@@ -34,6 +34,7 @@ class HouseholdActor extends BaseEconActor {
 
   @Override
   def status() {
+
     def moneyAcct = Bank.getAccountValue(this.uuid)
     builder.household {
         type this.class.simpleName
@@ -225,7 +226,7 @@ class HouseholdActor extends BaseEconActor {
     o.setAccountLock(accountLock)
     o.setOrderItemsRemaining(shoppingList)
     def response = reg.messageActor(market, new Message(Command.FULFILL_ORDER, [o]))
-    println("submitORder response = ${response}")
+    //println("submitORder response = ${response}")
     response
   }
 
