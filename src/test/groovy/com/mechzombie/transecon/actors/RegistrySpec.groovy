@@ -10,7 +10,7 @@ import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
 import spock.lang.Shared
 
-class SystemStatusSpec extends BaseActorTest {
+class RegistrySpec extends BaseActorTest {
 
   def product = 'beanbags'
   def producerPrice = 5
@@ -36,6 +36,9 @@ class SystemStatusSpec extends BaseActorTest {
   def "get Complete System State"() {
     when:
     def sysState = reg.getSystemStateString()
+
+    println( "sys: ${sysState}" )
+
     def expected = new JsonBuilder()
     expected.system {
       houseHolds ([
@@ -82,7 +85,7 @@ class SystemStatusSpec extends BaseActorTest {
           }
       ])
       turnData {
-        turnNumber 0
+        turn 0
       }
     }
     then:

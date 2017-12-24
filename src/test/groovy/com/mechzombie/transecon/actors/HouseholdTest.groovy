@@ -16,15 +16,28 @@ class HouseholdTest extends BaseActorTest {
   def "handling basic messages"() {
 
     def response
-  //  when:
-  //  response = hh.sendAndWait('test') //'Message', {reply -> response = reply}
-  //  then:
-  //  response != null
-  //  println response
+
     when:
     response = hh.sendAndWait(new Message(Command.STATUS))
     then:
-    //println ("output=  ${response}")
+
+    String resp = '{"household":{"type":"HouseholdActor","id":"' +
+      hh.uuid.toString() +
+     '","requirements":{},"resources":{},"money":0.0}}'
+    response.toString() == resp
+
+  }
+
+  def "asJson test" () {
+    def response
+
+    when:
+    response = hh.asJson()
+    then:
+
+    String resp = '{"household":{"type":"HouseholdActor","id":"' +
+        hh.uuid.toString() +
+        '","requirements":{},"resources":{},"money":0.0}}'
     response.toString() == "[household:[type:HouseholdActor, id:${hh.uuid}, requirements:[:], resources:[:], money:0.0]]"
 
   }

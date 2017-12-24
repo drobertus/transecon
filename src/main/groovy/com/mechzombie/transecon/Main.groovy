@@ -1,50 +1,39 @@
 package com.mechzombie.transecon
 
 import com.mechzombie.transecon.actors.HouseholdActor
+import com.mechzombie.transecon.actors.Registry
 
-class Main implements Runnable {
+class Main {
 
-  public static Thread theModel;
-  static final Thread mainThread = Thread.currentThread();
-  WorldModel world;
-  Scanner scanner
-  def keepGoing = true
+  //public static Thread theModel;
+  //static final Thread mainThread = Thread.currentThread();
+  static Registry reg = Registry.getInstance()
+  static Scanner scanner
+  static def keepGoing = true
+  static def model = [:]
 
-  Main(WorldModel wm) {
-    this.world = wm
+  Main () {
+
   }
 
   static void main(String[] args) {
-    def wm = new WorldModel()
 
-    Scanner sc = new Scanner(System.in);
+
+    scanner = new Scanner(System.in);
     println "model name?"
-    def modelName = sc.nextLine()// 'What is model name?'
-    wm.modelName = modelName
-     println("households?")
+    def modelName = scanner.nextLine()// 'What is model name?'
+    model.modelName = modelName
+    println("How many households?")
 
-    def households = sc.nextInt() //System.console().readLine 'How many households?'
-
-    if (households > 10) {
-      households = 10
-    }
+    def households = scanner.nextInt() //System.console().readLine 'How many households?'
 
     households.times {
-      def id = UUID.randomUUID()
-      def hh = new HouseholdActor(uuid: id)
-      hh.start()
-      wm.households.put(id, hh)
 
+      def id = UUID.randomUUID()
+      def hh = new HouseholdActor()
+      reg.addActor(hh)
       println "added household ${id}"
     }
-
-    def main = new Main(wm)
-    main.scanner = sc
-
-    theModel = new Thread(main).run()
-  }
-
-  void run() {
 
     while (keepGoing) {
       def command = scanner.nextLine()
@@ -70,6 +59,7 @@ class Main implements Runnable {
       }
     }
   }
+
 }
 
 /*

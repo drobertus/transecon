@@ -6,6 +6,7 @@ import com.mechzombie.transecon.messages.Purchase
 import com.mechzombie.transecon.messages.dtos.Order
 import com.mechzombie.transecon.resources.Bank
 import com.mechzombie.transecon.resources.Shelf
+import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -31,7 +32,7 @@ class MarketActor extends BaseEconActor {
   }
 
   @Override
-  def status() {
+  String status() {
     builder.econactor {
       type this.class.simpleName
       id this.uuid
@@ -44,7 +45,25 @@ class MarketActor extends BaseEconActor {
       money Bank.getAccountValue(this.uuid)
     }
     log.debug "here: ${builder.toString()}"
-    return builder.content
+    return builder.writer.toString()
+  }
+
+  @Override
+  def asJson() {
+    JsonBuilder jb = new JsonBuilder()
+    jb.econactor {
+      type this.class.simpleName
+      id this.uuid
+      inventory (this.inventory.collect { shelf ->
+        return {
+          product shelf.key
+          count  shelf.value.availableCount
+        }
+      })
+      money Bank.getAccountValue(this.uuid)
+    }
+    //log.debug "here: ${builder.toString()}"
+    return jb.content
   }
 
 
@@ -116,6 +135,9 @@ class MarketActor extends BaseEconActor {
             } else {
               theResponse = -1.0
             }
+            break
+          case Command.AS_JSON:
+            theResponse = asJson()
             break
           case Command.STATUS:
             theResponse = status()

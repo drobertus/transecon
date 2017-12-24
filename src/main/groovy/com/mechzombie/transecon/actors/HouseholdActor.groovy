@@ -4,13 +4,14 @@ import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.messages.dtos.Order
 import com.mechzombie.transecon.resources.Bank
+import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import groovyx.gpars.dataflow.Promise
 
 @Slf4j
-class HouseholdActor extends BaseEconActor {
+class HouseholdActor extends BaseEconActor implements ToJson {
 
   Map<String, Integer> demands = [:] //this that the household needs per unit time
   Map<String, Integer> resources = [:] //this owned by or produced by the household per unit time
@@ -18,22 +19,33 @@ class HouseholdActor extends BaseEconActor {
 
   Map<String, Integer> turnNeeds = [:]
   double turnBudget = 0.0
+  def hhStepList = [Command.CALC_NEEDS,
+  Command.FINANCE_TURN,
+  Command.PURCHASE_SUPPLIES,
+  Command.CONSUME]
 
   HouseholdActor(UUID id = UUID.randomUUID(), Map demands = [:], Map resources = [:]) {
     super(id)
     setDemands demands
     setResources(resources)
-    this.stepList = [Command.CALC_NEEDS,
-                     Command.FINANCE_TURN,
-                     Command.PURCHASE_SUPPLIES,
-                     Command.CONSUME]
-    this
+    this.stepList = hhStepList
+
     resetTurnStatus()
     log.info("Created Household ${id}")
   }
 
+  HouseholdActor(model) {
+    super((Integer)model.id)
+    this.resources = model.resources
+    this.name = model.name
+    this.demands = model.turnDemands
+    this.stepList = hhStepList
+    def deposited = Bank.deposit(this.uuid, Double.parseDouble("${model.bankAccountValue}"))
+    resetTurnStatus()
+  }
+
   @Override
-  def status() {
+  String status() {
 
     def moneyAcct = Bank.getAccountValue(this.uuid)
     builder.household {
@@ -43,8 +55,25 @@ class HouseholdActor extends BaseEconActor {
         resources this.resources
         money moneyAcct
       }
+    println(builder)
+    builder.writer.flush()
 
-    return builder.content
+    return builder.writer.toString()///.content
+  }
+
+  @Override
+  def asJson() {
+    def objBuilder = new JsonBuilder()
+    def moneyAcct = Bank.getAccountValue(this.uuid)
+    objBuilder.household {
+      type this.class.simpleName
+      id this.uuid
+      requirements this.demands
+      resources this.resources
+      money moneyAcct
+    }
+    return objBuilder.content
+
   }
 
   @Override
@@ -63,6 +92,9 @@ class HouseholdActor extends BaseEconActor {
         switch (it.type) {
           case String:
             theResponse = "Woohoo!!"
+            break
+          case Command.AS_JSON:
+            theResponse = asJson()
             break
           case Command.STATUS:
             theResponse = status()
@@ -232,7 +264,7 @@ class HouseholdActor extends BaseEconActor {
 
   @Override
   def clear() {
-    this.demands.clear()
-    this.resources.clear()
+    this.demands?.clear()
+    this.resources?.clear()
   }
 }

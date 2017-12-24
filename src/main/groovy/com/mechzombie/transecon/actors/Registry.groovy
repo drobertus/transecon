@@ -4,7 +4,6 @@ import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
-import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import groovyx.gpars.dataflow.Promise
 import groovyx.gpars.group.DefaultPGroup
@@ -12,9 +11,6 @@ import groovyx.gpars.group.PGroup
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ConcurrentMap
-import java.util.function.BiConsumer
-
 import static groovyx.gpars.GParsPool.withPool
 
 @Slf4j
@@ -22,7 +18,8 @@ import static groovyx.gpars.GParsPool.withPool
 class Registry {
 
   PGroup pGroup = new DefaultPGroup(Runtime.getRuntime().availableProcessors())
-  Map<UUID, BaseEconActor> actors = [:] as ConcurrentHashMap
+  static Map<UUID, BaseEconActor> actors = [:] as ConcurrentHashMap
+  static Map<Integer, UUID> modelMap = [:]
   List<MarketActor> markets = []
   List<SupplierActor> suppliers = []
   List<HouseholdActor> households = []
@@ -31,6 +28,9 @@ class Registry {
 
   def addActor(BaseEconActor actor) {
     actors.put(actor.uuid, actor)
+    if(actor.id) {
+      modelMap.put(actor.id, actor.uuid)
+    }
     if (actor instanceof MarketActor) markets << (MarketActor) actor
     if (actor instanceof SupplierActor) suppliers << (SupplierActor) actor
     if (actor instanceof HouseholdActor) households << (HouseholdActor) actor
@@ -42,7 +42,7 @@ class Registry {
     }
   }
 
-  Promise messageActor(uuid, Message message){
+  static Promise messageActor(uuid, Message message){
     log.info("sending message to actor ${uuid}, msg ${message.type}")
     return actors.get(uuid).sendAndPromise(message)
   }
@@ -59,7 +59,9 @@ class Registry {
     Message turnMsg = new Message(Command.TAKE_TURN, [turnNum: turnNumber])
     //TODO: this needs to be non-blocking
     withPool(Runtime.runtime.availableProcessors(), {
-      actors.eachParallel() { k, v ->
+      actors.entrySet().eachParallel() { // k, v ->
+        def  k = ((Map.Entry<UUID, BaseEconActor>)it).key
+        def  v = ((Map.Entry<UUID, BaseEconActor>)it).value
         log.info "adding ${k} of type ${v.class}"
         turnStatus << messageActor(k, turnMsg)
       }
@@ -73,14 +75,14 @@ class Registry {
     def hhStatus = []
     def suppStatus = []
     markets.each { it ->
-      marketStatus << messageActor(it.uuid, new Message(Command.STATUS)).get()
+      marketStatus << messageActor(it.uuid, new Message(Command.AS_JSON)).get()
     }
     households.each {
-      hhStatus << messageActor(it.uuid, new Message(Command.STATUS)).get()
+      hhStatus << messageActor(it.uuid, new Message(Command.AS_JSON)).get()
     }
 
     suppliers.each {
-      suppStatus << messageActor(it.uuid, new Message(Command.STATUS)).get()
+      suppStatus << messageActor(it.uuid, new Message(Command.AS_JSON)).get()
     }
 
     status.system {
@@ -88,11 +90,17 @@ class Registry {
       systemMarkets marketStatus
       theSuppliers suppStatus
       turnData {
-        turnNumber this.turnNumber
+        turn this.turnNumber
       }
     }
 
-    return status
+    return status.toString()
+  }
+
+  static def getActorByModelId(id) {
+    UUID uuid = modelMap.get(id)
+    println("uuid ${uuid}")
+    return actors.get(uuid)
   }
 
   def getSystemStateString() {
@@ -100,9 +108,9 @@ class Registry {
   }
 
   def cleanup() {
-    markets = []
-    suppliers = []
-    households = []
+    markets.clear()
+    suppliers.clear()
+    households.clear()
     this.turnNumber = 0
     actors.each { k,v ->
       try {

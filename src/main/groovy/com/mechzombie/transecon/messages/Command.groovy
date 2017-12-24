@@ -11,6 +11,7 @@ enum Command {
   FULFILL_ORDER('fulfill_order', [Order]),
   SEND_MONEY('send_money', ['from', 'amount', 'reason']),
   STATUS('status'),
+  AS_JSON('asJson'),
   RUN_PAYROLL('run_payroll'),
   CALC_DEMAND('calc_demand'),
   CALC_NEEDS('calc_needs'),

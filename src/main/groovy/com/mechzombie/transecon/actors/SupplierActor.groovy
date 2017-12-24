@@ -3,6 +3,7 @@ package com.mechzombie.transecon.actors
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
+import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -48,7 +49,7 @@ class SupplierActor extends BaseEconActor{
   }
 
   @Override
-  def status() {
+  String status() {
     builder.econactor {
         type this.class.simpleName
         id this.uuid
@@ -59,7 +60,23 @@ class SupplierActor extends BaseEconActor{
         money Bank.getAccountValue(this.uuid)
       }
 
-    return builder.content //.toString()
+    return builder.writer.toString() //content //.toString()
+  }
+
+  @Override
+  def asJson() {
+    JsonBuilder jb = new JsonBuilder()
+    jb.econactor {
+      type this.class.simpleName
+      id this.uuid
+      output product
+      perUnitInputs this.inputs
+      resources this.resources
+      employees this.employees
+      money Bank.getAccountValue(this.uuid)
+    }
+
+    return jb.content //.toString()
   }
 
   @Override
@@ -71,6 +88,9 @@ class SupplierActor extends BaseEconActor{
         switch (it.type) {
           case Command.STATUS:
             theResponse = status()
+            break
+          case Command.AS_JSON:
+            theResponse = asJson()
             break
           case Command.RUN_PAYROLL:
             def payroll = [:]

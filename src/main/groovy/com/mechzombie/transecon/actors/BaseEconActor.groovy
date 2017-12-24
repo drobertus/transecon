@@ -4,6 +4,7 @@ import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
 import groovy.json.JsonBuilder
+import groovy.json.StreamingJsonBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
@@ -15,10 +16,13 @@ abstract class BaseEconActor extends DefaultActor {
   int lastCompletedTurn = 0
   protected Map<Command, String> currentTurnStatus = [:]
   protected List<Command> stepList
-  JsonBuilder builder = new JsonBuilder()
+  protected StreamingJsonBuilder builder = new StreamingJsonBuilder(new StringWriter(1000)) //JsonBuilder builder = new JsonBuilder()
+
   Registry reg = Registry.instance
 
   UUID uuid
+  int id
+  String name
   UUID privateUUID
 
   BaseEconActor(UUID id = UUID.randomUUID()) {
@@ -27,9 +31,17 @@ abstract class BaseEconActor extends DefaultActor {
     reg.addActor(this)
   }
 
-  def getSteps() {
-    return stepList
+
+  BaseEconActor(Integer id) {
+    this.id = id
+    this.uuid = UUID.randomUUID()
+    privateUUID = Bank.createAccount(uuid)
+    //reg.addActor(this)
   }
+
+//  def getSteps() {
+//    return stepList
+//  }
 
   abstract def clear()
 
@@ -91,11 +103,21 @@ abstract class BaseEconActor extends DefaultActor {
   int lastCompletedTurn() {
     return lastCompletedTurn
   }
-  abstract def status()
+  /**
+   *
+   * @return String representing the onbject serialized to JSON
+   */
+  abstract String status()
 
-  protected def sendMoney(UUID recipient, Double amount, reason = null) {
-    return Bank.deposit(recipient, amount)
-  }
+  /**
+   *
+   * @return JsonBuilder.content
+   */
+  abstract def asJson()
+//
+//  protected def sendMoney(UUID recipient, Double amount, reason = null) {
+//    return Bank.deposit(recipient, amount)
+//  }
 
   def getBankBalance() {
     return Bank.getAccountValue(this.uuid)
