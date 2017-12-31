@@ -3,11 +3,12 @@ package com.mechzombie.transecon.actors
 import com.mechzombie.transecon.messages.Command
 import com.mechzombie.transecon.messages.Message
 import com.mechzombie.transecon.resources.Bank
-import groovy.json.JsonBuilder
 import groovy.json.StreamingJsonBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
+
+import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j
 @CompileStatic
@@ -24,24 +25,28 @@ abstract class BaseEconActor extends DefaultActor {
   int id
   String name
   UUID privateUUID
+  private static AtomicInteger idSeq = new AtomicInteger(0)
 
-  BaseEconActor(UUID id = UUID.randomUUID()) {
-    this.uuid = id
+  /**
+   * A default constructor, based on UUID
+   * @param id
+   */
+  BaseEconActor(UUID uuid = UUID.randomUUID()) {
+    this.uuid = uuid
+    this.id = idSeq.incrementAndGet()
     privateUUID = Bank.createAccount(uuid)
     reg.addActor(this)
   }
 
-
+  /**
+   * Constructor used from eco file, based on Integer id
+   * @param id
+   */
   BaseEconActor(Integer id) {
     this.id = id
     this.uuid = UUID.randomUUID()
     privateUUID = Bank.createAccount(uuid)
-    //reg.addActor(this)
   }
-
-//  def getSteps() {
-//    return stepList
-//  }
 
   abstract def clear()
 
@@ -70,7 +75,6 @@ abstract class BaseEconActor extends DefaultActor {
     String status = 'complete'
     if (currentTurnStatus.size() == stepList.size()){
       currentTurnStatus.entrySet().each {
-      //for(Map.Entry<String, String> obj : currentTurnStatus) { //.each {k,v ->
         if (it.value != 'complete'){
           status = 'incomplete'
         }
@@ -114,10 +118,6 @@ abstract class BaseEconActor extends DefaultActor {
    * @return JsonBuilder.content
    */
   abstract def asJson()
-//
-//  protected def sendMoney(UUID recipient, Double amount, reason = null) {
-//    return Bank.deposit(recipient, amount)
-//  }
 
   def getBankBalance() {
     return Bank.getAccountValue(this.uuid)

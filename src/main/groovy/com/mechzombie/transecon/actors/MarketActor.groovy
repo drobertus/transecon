@@ -13,6 +13,9 @@ import groovy.util.logging.Slf4j
 class MarketActor extends BaseEconActor {
 
   Map<String, Shelf> inventory = [:] //products, grouped  by type, ordered  by price.  buy the cheap one first (for now)
+  def marketStepList = []
+
+
   MarketActor(UUID id = UUID.randomUUID()) {
     super(id)
     log.info("Created Market ${id}")
@@ -29,6 +32,18 @@ class MarketActor extends BaseEconActor {
     }
 
     return shelf.addToShelf(supplier, quantity, price)
+  }
+
+  MarketActor(model) {
+    super((Integer)model.id)
+    //this.resources = model.resources
+    // TODO: add inventory
+    this.name = model.name
+    this.stepList = marketStepList
+    if(model.bankAccountValue) {
+      def deposited = Bank.deposit(this.uuid, Double.parseDouble("${model.bankAccountValue}"))
+    }
+    resetTurnStatus()
   }
 
   @Override

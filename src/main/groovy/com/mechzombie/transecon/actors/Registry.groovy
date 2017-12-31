@@ -27,10 +27,14 @@ class Registry {
   int turnNumber = 0
 
   def addActor(BaseEconActor actor) {
-    actors.put(actor.uuid, actor)
     if(actor.id) {
+      if (modelMap.get(actor.id) != null) {
+        throw new Exception("An actor with id ${actor.id} already exists.  Can not add another")
+      }
       modelMap.put(actor.id, actor.uuid)
     }
+    actors.put(actor.uuid, actor)
+
     if (actor instanceof MarketActor) markets << (MarketActor) actor
     if (actor instanceof SupplierActor) suppliers << (SupplierActor) actor
     if (actor instanceof HouseholdActor) households << (HouseholdActor) actor

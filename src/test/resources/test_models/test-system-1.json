@@ -86,8 +86,29 @@
         }
       }
     ],
-    "markets": [{}],
-    "producers": []
+    "markets": [{
+      "id": 10
+      },
+      {
+        "id": 11
+      }
+    ],
+    "suppliers": [{
+      "id": 100,
+      "bankAccountValue": 200,
+      "product": "food",
+      "resources": {
+        "land": 100,
+        "fuel": 20
+      }
+    },
+      {
+        "id": 101,
+        "bankAccountValue": 210,
+        "product": "entertainment",
+        "resources": {
+          "land": 10
+        }
+      }]
   }
-
 }

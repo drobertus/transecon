@@ -17,10 +17,18 @@ class SupplierActor extends BaseEconActor{
 
   Integer productionGoalForTurn
   def toBePurchasedForProductionGoal
+  final def supplierSteps = [
+      Command.CALC_NEEDS,
+      Command.FINANCE_TURN,
+      //Command.CALC_DEMAND,
+      Command.RUN_PAYROLL,
+      Command.PURCHASE_SUPPLIES,
+      Command.PRODUCE_ITEMS,
+      Command.SHIP_ITEMS]
 
   def sales
 
-  SupplierActor(UUID id=UUID.randomUUID(), product, inputsPerUnit = [:], resources =[:], employees = [:]) {
+  SupplierActor(UUID id=UUID.randomUUID(), String product, inputsPerUnit = [:], resources =[:], employees = [:]) {
     super(id)
     this.product = product
     employees.each { k, v ->
@@ -31,17 +39,20 @@ class SupplierActor extends BaseEconActor{
     this.resources = resources
 
     //println ("supplier ${uuid}")
-    this.stepList = [
-        Command.CALC_NEEDS,
-        Command.FINANCE_TURN,
-        //Command.CALC_DEMAND,
-        Command.RUN_PAYROLL,
-        Command.PURCHASE_SUPPLIES,
-        Command.PRODUCE_ITEMS,
-        Command.SHIP_ITEMS]
+    this.stepList = supplierSteps
                      //Command.STOCK_ITEM]
     resetTurnStatus()
     log.info("Created Supplier ${id}")
+  }
+
+  SupplierActor(model) {
+    super((Integer)model.id)
+    this.resources = model.resources
+    // TODO: add inventory
+    this.name = model.name
+    this.stepList = supplierSteps
+    def deposited = Bank.deposit(this.uuid, Double.parseDouble("${model.bankAccountValue}"))
+    resetTurnStatus()
   }
 
   def employHousehold(UUID uuid, int monthlyWage) {
