@@ -116,11 +116,13 @@ class Registry {
     suppliers.clear()
     households.clear()
     this.turnNumber = 0
+    this.modelMap.clear()
     actors.each { k,v ->
       try {
         v.clear()
         v.stop()
         actors.remove(k)
+
       }catch(Exception e) {
         e.printStackTrace()
       }
